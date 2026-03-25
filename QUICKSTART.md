@@ -1,5 +1,7 @@
 # Quick Start Guide
 
+**Bot Author:** Davidf aka darynx
+
 ## Setup Instructions (5 minutes)
 
 ### 1. Create a Discord Bot Application
@@ -84,6 +86,8 @@ You should see:
 [Bot INFO] Loaded command: create
 [Bot INFO] Loaded command: setup
 [Bot INFO] Loaded command: help
+[Bot INFO] Loaded command: videonotifier
+[Bot INFO] Loaded command: github
 ```
 
 ### 6. Test the Bot
@@ -108,6 +112,76 @@ Click the button or use:
 ```
 Fill in the form and a new voice channel will appear!
 
+**Test 4: Test video notifier**
+```
+/videonotifier set-channel channel:#announcements
+/videonotifier test-youtube
+```
+
+**Test 5: Test GitHub notifier**
+```
+/github set-channel channel:#github-notifications
+/github test-push
+```
+
+---
+
+## Setting Up Video Notifier
+
+### YouTube Notifications
+1. Find a YouTube channel ID (from the channel URL)
+2. Set the notification channel:
+   ```
+   /videonotifier set-channel channel:#announcements
+   ```
+3. Add a YouTube channel:
+   ```
+   /videonotifier add-youtube channel-id:UCxxxxxxxxxxxxx label:"My Channel"
+   ```
+4. Test it:
+   ```
+   /videonotifier test-youtube
+   ```
+
+### TikTok Notifications
+1. Get the TikTok username (without @)
+2. Add a TikTok channel:
+   ```
+   /videonotifier add-tiktok username:coolcreator label:"Cool Creator"
+   ```
+3. Test it:
+   ```
+   /videonotifier test-tiktok
+   ```
+
+### Managing Video Notifications
+- List all channels: `/videonotifier list`
+- Remove a channel: `/videonotifier remove-youtube` or `/videonotifier remove-tiktok`
+- Toggle on/off: `/videonotifier toggle`
+
+---
+
+## Setting Up GitHub Integration
+
+1. Set the notification channel:
+   ```
+   /github set-channel channel:#github-notifications
+   ```
+2. Check the status:
+   ```
+   /github status
+   ```
+3. Test with a push notification:
+   ```
+   /github test-push
+   ```
+4. In your GitHub repository, add a webhook:
+   - Payload URL: `http://your-server-ip:3000/github-webhook`
+   - Content type: `application/json`
+   - Events: Pushes, Pull requests, Issues
+
+---
+
 ## Troubleshooting
 
 ### Bot doesn't respond to commands
@@ -130,17 +204,38 @@ Fill in the form and a new voice channel will appear!
 - Verify the token is correct (no extra spaces)
 - Check that all intents are enabled in Discord Developer Portal
 
+### Video notifier not working
+- Check that `features.videoNotifier` is true in config.json
+- Verify the notification channel is set: `/videonotifier set-channel`
+- Test with: `/videonotifier test-youtube`
+- Check bot logs for RSS feed errors
+
+### GitHub notifier not working
+- Check that `github.enabled` is true in config.json
+- Verify the webhook server is running (`/github status`)
+- Ensure the notification channel is set: `/github set-channel`
+- Test with: `/github test-push`
+
+---
+
 ## Configuration Tips
 
 ### For Private Servers
-Set `controlChannelId` to your welcome or rules channel for announcements.
+- Set `controlChannelId` to your welcome or rules channel for announcements
+- Use separate channels for video and GitHub notifications
 
 ### For Public Servers
 - Create a dedicated "Voice Channels" category
 - Run `/setup` in a "bot-commands" channel
 - Set a higher user limit in `config.json`
+- Set up dedicated notification channels for videos and GitHub
 
 ### Customization
 - Change colors in `embedColors` to match your server theme
 - Adjust `deleteDelay` if you want channels to persist longer
 - Set `defaultUserLimit` based on your community size
+- Customize GitHub embed colors per event type
+
+---
+
+**Created by Davidf aka darynx**

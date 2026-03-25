@@ -6,10 +6,6 @@
 
 A modular, configurable Discord bot with utility functionality built with Discord.js v14 and JavaScript.
 
-**Author:** Davidf aka darynx
-
-**Repository:** [https://github.com/Davidf1121/utility-discord-bot](https://github.com/Davidf1121/utility-discord-bot)
-
 ---
 
 ## ✨ Features
@@ -327,12 +323,3 @@ Contributions are welcome! Feel free to open an issue or submit a pull request.
 ## 📝 License
 
 ISC
-
----
-
-## 👤 Author
-
-**Davidf aka darynx**
-
-- GitHub: [@Davidf1121](https://github.com/Davidf1121)
-- Project: [utility-discord-bot](https://github.com/Davidf1121/utility-discord-bot)

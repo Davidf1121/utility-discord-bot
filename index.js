@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import { loadConfig } from './utils/ConfigLoader.js';
 import { createLogger } from './utils/Logger.js';
 import { TempChannelManager } from './utils/TempChannelManager.js';
+import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -23,8 +24,10 @@ const client = new Client({
 client.commands = new Collection();
 
 const tempChannelManager = new TempChannelManager(client, config);
+const videoNotifierManager = new VideoNotifierManager(client, config);
 
 client.tempChannelManager = tempChannelManager;
+client.videoNotifierManager = videoNotifierManager;
 
 async function loadEvents() {
   const eventsPath = path.join(__dirname, 'events');

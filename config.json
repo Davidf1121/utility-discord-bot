@@ -18,6 +18,24 @@
   },
   "features": {
     "tempVoiceChannels": true,
-    "autoCleanup": true
+    "autoCleanup": true,
+    "videoNotifier": true
+  },
+  "videoNotifier": {
+    "enabled": true,
+    "checkInterval": 300000,
+    "notificationChannelId": "",
+    "youtube": {
+      "enabled": true,
+      "channels": []
+    },
+    "tiktok": {
+      "enabled": true,
+      "channels": []
+    },
+    "embedSettings": {
+      "includeDescription": true,
+      "descriptionLength": 200
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
 import { readFileSync } from 'fs';
 import { loadConfig } from './utils/ConfigLoader.js';

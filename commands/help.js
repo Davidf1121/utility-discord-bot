@@ -85,8 +85,30 @@ export default {
       )
       
       .setTimestamp()
+      // GitHub Notifier Section
+      .addFields(
+        { 
+          name: '🐙 GitHub Notifier (Admin Only)', 
+          value: [
+            'Receive notifications for GitHub repository events like pushes, pull requests, and issues.',
+            '',
+            '`/github set-channel` - Set the Discord channel for GitHub notifications',
+            '`/github set-webhook` - Configure the webhook URL for GitHub',
+            '`/github toggle` - Enable or disable GitHub notifications',
+            '`/github test` - Send a test notification to verify setup',
+            '',
+            '**Features:**',
+            '• Push event notifications with commit details',
+            '• Pull request open/close/merge notifications',
+            '• Issue open/close notifications',
+            '• Configurable webhook path and port'
+          ].join('\n'), 
+          inline: false 
+        }
+      )
+      
       .setFooter({ 
-        text: `Utility Discord Bot v1.0.0 | Created by Davidf aka darynx`, 
+        text: `Discord Utility Bot | Created by Davidf aka darynx`, 
         iconURL: interaction.client.user.displayAvatarURL() 
       });
 

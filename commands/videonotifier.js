@@ -65,6 +65,14 @@ export default {
       subcommand
         .setName('toggle')
         .setDescription('Toggle the video notifier on or off'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('test-youtube')
+        .setDescription('Send a test YouTube notification'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('test-tiktok')
+        .setDescription('Send a test TikTok notification'))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   
   async execute(interaction) {
@@ -93,9 +101,33 @@ export default {
         return handleSetChannel(interaction, manager);
       case 'toggle':
         return handleToggle(interaction, manager);
+      case 'test-youtube':
+        return handleTestYouTube(interaction, manager);
+      case 'test-tiktok':
+        return handleTestTikTok(interaction, manager);
     }
   }
 };
+
+async function handleTestYouTube(interaction, manager) {
+  try {
+    await interaction.deferReply({ ephemeral: true });
+    await manager.sendTestYouTubeNotification();
+    await interaction.editReply('✅ Test YouTube notification sent!');
+  } catch (error) {
+    await interaction.editReply(`❌ Error sending test notification: ${error.message}`);
+  }
+}
+
+async function handleTestTikTok(interaction, manager) {
+  try {
+    await interaction.deferReply({ ephemeral: true });
+    await manager.sendTestTikTokNotification();
+    await interaction.editReply('✅ Test TikTok notification sent!');
+  } catch (error) {
+    await interaction.editReply(`❌ Error sending test notification: ${error.message}`);
+  }
+}
 
 async function handleList(interaction, manager) {
   const channels = manager.listChannels();

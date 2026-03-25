@@ -24,5 +24,9 @@ export default {
     if (config.features?.videoNotifier && client.videoNotifierManager) {
       client.videoNotifierManager.start();
     }
+
+    if (config.github?.enabled && client.githubNotifierManager) {
+      client.githubNotifierManager.start();
+    }
   }
 };

@@ -41,5 +41,17 @@
       "includeDescription": true,
       "descriptionLength": 200
     }
+  },
+  "github": {
+    "enabled": true,
+    "notificationChannelId": "",
+    "port": 3000,
+    "secret": "",
+    "embedColors": {
+      "push": 5793287,
+      "pull_request": 5783218,
+      "issues": 15548997,
+      "default": 10197915
+    }
   }
 }

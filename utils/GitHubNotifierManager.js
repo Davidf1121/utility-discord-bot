@@ -28,7 +28,9 @@ export class GitHubNotifierManager {
       }
     }));
 
-    this.app.post('/github-webhook', (req, res) => {
+    const webhookPath = this.config.github?.webhookPath || '/github-webhook';
+
+    this.app.post(webhookPath, (req, res) => {
       this.logger.debug('Received GitHub webhook');
 
       if (secret) {

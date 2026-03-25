@@ -46,6 +46,7 @@
     "enabled": true,
     "notificationChannelId": "",
     "port": 3000,
+    "webhookPath": "/github-webhook",
     "secret": "",
     "embedColors": {
       "push": 5793287,

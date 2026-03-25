@@ -247,57 +247,195 @@ Notifications include:
 
 The GitHub integration receives webhook events and sends Discord notifications for pushes, pull requests, and issues.
 
-### Setting Up GitHub Webhooks
+### Understanding the Webhook URL
 
-1. **Set the notification channel**:
-   ```
-   /github set-channel channel:#github-notifications
-   ```
+GitHub needs a **publicly accessible URL** to send webhook events to your bot. The webhook URL format is:
+```
+http://your-public-url:PORT/github-webhook
+```
 
-2. **Configure the webhook server port** (optional, default: 3000):
-   ```
-   /github set-port port:3000
-   ```
+**What is "your-public-url"?**
+- If running on a VPS/server: Your server's public IP address or domain name
+- If running locally: Use a tool like **ngrok** to create a public tunnel (see below)
 
-3. **Check status**:
-   ```
-   /github status
-   ```
+### Option A: Local Development with ngrok (Recommended for Testing)
 
-4. **Test the setup**:
-   ```
-   /github test-push
-   ```
+**What is ngrok?**
+ngrok is a free tool that creates a temporary public URL that forwards to your local machine - perfect for testing webhooks.
+
+**1. Install ngrok:**
+- Download from [ngrok.com](https://ngrok.com/download)
+- Or install via package manager:
+  ```bash
+  # macOS
+  brew install ngrok
+
+  # Windows (with Chocolatey)
+  choco install ngrok
+
+  # Linux
+  snap install ngrok
+  ```
+
+**2. Start the bot first:**
+```bash
+npm start
+```
+
+**3. In a new terminal, start ngrok:**
+```bash
+ngrok http 3000
+```
+
+**4. Copy the HTTPS URL** (looks like `https://abc123def.ngrok.io`):
+```
+Forwarding  https://abc123def.ngrok.io -> http://localhost:3000
+```
+
+**5. Your webhook URL is:**
+```
+https://abc123def.ngrok.io/github-webhook
+```
+
+> ⚠️ **Note:** ngrok URLs change every time you restart ngrok. For permanent setups, use a VPS or upgrade to ngrok's paid plan for a static domain.
+
+### Option B: Production Server Setup
+
+If hosting on a VPS or dedicated server:
+
+1. Ensure your server has a public IP address
+2. Make sure port 3000 (or your configured port) is open in your firewall
+3. Your webhook URL will be: `http://YOUR_SERVER_IP:3000/github-webhook`
+4. For HTTPS, use a reverse proxy (nginx) or a service like Cloudflare Tunnel
+
+### Bot Configuration
+
+**1. Configure `config.json`:**
+
+```json
+{
+  "github": {
+    "enabled": true,
+    "notificationChannelId": "YOUR_DISCORD_CHANNEL_ID",
+    "port": 3000,
+    "webhookPath": "/github-webhook",
+    "secret": "",
+    "embedColors": {
+      "push": 5793287,
+      "pull_request": 5783218,
+      "issues": 15548997,
+      "default": 10197915
+    }
+  }
+}
+```
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `enabled` | Turn the GitHub notifier on/off | `true` |
+| `notificationChannelId` | Discord channel ID where notifications are sent | `"123456789012345678"` |
+| `port` | Port for the webhook server to listen on | `3000` |
+| `webhookPath` | URL path for webhook endpoint | `"/github-webhook"` |
+| `secret` | Optional secret for verifying GitHub payloads (see security note below) | `"my-secret-key"` |
+
+**2. Set the notification channel via Discord command:**
+```
+/github set-channel channel:#github-notifications
+```
 
 ### Configuring GitHub Repository Webhooks
 
-1. Go to your GitHub repository settings
-2. Navigate to "Webhooks" > "Add webhook"
-3. Set Payload URL to: `http://your-server-ip:3000/github-webhook`
-4. Set Content type to: `application/json`
-5. Select events: Pushes, Pull requests, Issues
-6. Click "Add webhook"
+Follow these steps to add a webhook to your GitHub repository:
 
-### Configuration Options
+**1. Navigate to Webhook Settings:**
+   - Go to your repository on GitHub
+   - Click **Settings** (tab at the top)
+   - Click **Webhooks** in the left sidebar
+   - Click **Add webhook** button
 
-In `config.json`, under `github`:
+**2. Configure the Webhook:**
+
+| Field | Value |
+|-------|-------|
+| **Payload URL** | Your webhook URL (e.g., `https://abc123.ngrok.io/github-webhook` or `http://your-server-ip:3000/github-webhook`) |
+| **Content type** | `application/json` |
+| **Secret** | (Optional) Same value as `config.json` `github.secret` |
+| **SSL verification** | Enable (default) |
+
+**3. Select Events:**
+   - Choose **"Let me select individual events"**
+   - Check the following:
+     - ✅ **Pushes** - Commit notifications
+     - ✅ **Pull requests** - PR open/close/merge
+     - ✅ **Issues** - Issue open/close
+   - Click **Add webhook**
+
+**4. Verify the webhook is working:**
+   - You should see a green checkmark next to the webhook
+   - If there's an error, click on the webhook to see delivery details
+
+### Test Your Setup
+
+**1. Check bot status:**
+```
+/github status
+```
+
+**2. Send a test notification:**
+```
+/github test-push
+```
+
+**3. Make a real event:**
+   - Push a commit to your repository
+   - Create a test issue or pull request
+   - Check your Discord channel for the notification!
+
+### Configuration Options Reference
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `enabled` | Enable/disable GitHub notifier | true |
-| `port` | Port for webhook server | 3000 |
-| `notificationChannelId` | Discord channel ID for notifications | "" |
-| `secret` | Webhook secret for verification (optional) | "" |
-| `embedColors.push` | Color for push notifications | 5793287 (Green) |
-| `embedColors.pull_request` | Color for PR notifications | 5783218 (Blurple) |
-| `embedColors.issues` | Color for issue notifications | 15548997 (Red) |
-| `embedColors.default` | Default color | 10197915 |
+| `enabled` | Enable/disable GitHub notifier | `true` |
+| `port` | Port for webhook server | `3000` |
+| `webhookPath` | URL path for webhook endpoint | `"/github-webhook"` |
+| `notificationChannelId` | Discord channel ID for notifications | `""` |
+| `secret` | Webhook secret for verification (optional) | `""` |
+| `embedColors.push` | Color for push notifications | `5793287` (Green) |
+| `embedColors.pull_request` | Color for PR notifications | `5783218` (Blurple) |
+| `embedColors.issues` | Color for issue notifications | `15548997` (Red) |
+| `embedColors.default` | Default color | `10197915` |
 
 ### Supported GitHub Events
 
 - **Push**: Shows commit list with author, commit hash, and message
 - **Pull Request**: Shows PR open/close/merge events with description
 - **Issues**: Shows issue open/close events with description
+
+### 🔒 Security: Webhook Secret (Optional but Recommended)
+
+To ensure webhook events are genuinely from GitHub:
+
+**1. Set a secret in `config.json`:**
+```json
+"secret": "your-random-secret-key"
+```
+
+**2. Use the same secret in GitHub webhook settings**
+
+**3. The bot will verify the signature on incoming webhooks**
+
+> 🔑 Generate a random secret: `openssl rand -hex 20`
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "No GitHub notification channel configured" | Run `/github set-channel` or set `notificationChannelId` in `config.json` |
+| Webhook shows red X in GitHub | Check the bot is running and the URL is correct and publicly accessible |
+| "Invalid signature" warnings | Make sure the secret in GitHub matches `config.json` exactly (or leave both empty) |
+| No notifications for events | Verify you've selected the correct events (Pushes, PRs, Issues) in GitHub webhook settings |
+| ngrok URL changed | Restart ngrok gives a new URL - update it in GitHub webhook settings or use a static domain (paid ngrok feature) |
+| Firewall blocking webhooks | Ensure port 3000 is open on your server (`sudo ufw allow 3000` on Ubuntu) |
 
 ---
 

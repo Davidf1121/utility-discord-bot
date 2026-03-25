@@ -1,34 +1,46 @@
 # Utility Discord Bot
 
-A modular, configurable Discord bot with utility stuff functionality built with Discord.js v14 and JavaScript.
+[![Discord.js Version](https://img.shields.io/badge/Discord.js-v14-blue.svg)](https://discord.js.org/)
+[![Node.js Version](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-ISC-yellow.svg)](LICENSE)
 
-## Features
+A modular, configurable Discord bot with utility functionality built with Discord.js v14 and JavaScript.
 
-- **Temporary Voice Channels**: Create custom voice channels that auto-delete when empty
-- **Video Notifier**: Monitor YouTube/TikTok channels and get notifications when new content is posted
-- **Modular Architecture**: Easy to extend with new commands and features
-- **Configuration-Based**: All settings externalized in `config.json`
-- **Multiple Creation Methods**:
+**Author:** Davidf aka darynx
+
+**Repository:** [https://github.com/Davidf1121/utility-discord-bot](https://github.com/Davidf1121/utility-discord-bot)
+
+---
+
+## ✨ Features
+
+- **🎤 Temporary Voice Channels**: Create custom voice channels that auto-delete when empty
+- **📺 Video Notifier**: Monitor YouTube/TikTok channels and get notifications when new content is posted
+- **🧩 Modular Architecture**: Easy to extend with new commands and features
+- **⚙️ Configuration-Based**: All settings externalized in `config.json`
+- **🔄 Multiple Creation Methods**:
   - Slash command `/create` with modal form
   - Setup command `/setup` to place control buttons
   - Join a "Create Voice Channel" voice channel for instant creation
-- **Auto-Cleanup**: Channels automatically delete when they become empty
-- **Customizable**: Configure colors, delays, limits, and more
+- **🧹 Auto-Cleanup**: Channels automatically delete when they become empty
+- **🎨 Customizable**: Configure colors, delays, limits, and more
 
-## Installation
+---
 
-1. Clone the repository:
+## 📦 Installation
+
+1. **Clone the repository:**
 ```bash
-git clone <repository-url>
+git clone https://github.com/Davidf1121/utility-discord-bot.git
 cd utility-discord-bot
 ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 ```bash
 npm install
 ```
 
-3. Configure the bot:
+3. **Configure the bot:**
 ```bash
 cp .env.example .env
 ```
@@ -38,7 +50,7 @@ Edit `.env` and add your Discord bot token:
 DISCORD_TOKEN=your_bot_token_here
 ```
 
-4. Update `config.json` with your server details:
+4. **Update `config.json` with your server details:**
 ```json
 {
   "clientId": "your_bot_client_id",
@@ -49,7 +61,9 @@ DISCORD_TOKEN=your_bot_token_here
 }
 ```
 
-## Getting Your IDs
+---
+
+## 🔧 Getting Your IDs
 
 ### Bot Client ID
 1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
@@ -64,19 +78,23 @@ DISCORD_TOKEN=your_bot_token_here
 1. With Developer Mode enabled
 2. Right-click on a channel or category > Copy ID
 
-## Running the Bot
+---
 
-Start the bot:
+## 🚀 Running the Bot
+
+**Start the bot:**
 ```bash
 npm start
 ```
 
-For development with auto-restart:
+**For development with auto-restart:**
 ```bash
 npm run dev
 ```
 
-## Configuration
+---
+
+## ⚙️ Configuration
 
 ### config.json Options
 
@@ -84,7 +102,7 @@ npm run dev
 |--------|-------------|---------|
 | `clientId` | Your Discord application ID | Required |
 | `guildId` | Your Discord server ID | Required |
-| `controlChannelId` | Channel for control panel | Optional |
+| `controlChannelId` | Channel for voice channel control panel | Optional |
 | `voiceCategoryId` | Category for temp channels | Required |
 | `tempChannelSettings.deleteDelay` | Delay before deletion (ms) | 5000 |
 | `tempChannelSettings.defaultUserLimit` | Max users per channel | 10 |
@@ -94,7 +112,9 @@ npm run dev
 | `embedColors.warning` | Warning embed color | 16775964 (Yellow) |
 | `embedColors.error` | Error embed color | 15548997 (Red) |
 
-## Commands
+---
+
+## 📋 Commands
 
 | Command | Description |
 |---------|-------------|
@@ -111,7 +131,9 @@ npm run dev
 | &nbsp;&nbsp;`/videonotifier set-channel` | Set Discord notification channel |
 | &nbsp;&nbsp;`/videonotifier toggle` | Toggle video notifier on/off |
 
-## Video Notifier Setup
+---
+
+## 📺 Video Notifier Setup
 
 The video notifier monitors YouTube and TikTok channels and sends Discord notifications when new content is posted.
 
@@ -162,6 +184,8 @@ In `config.json`, under `videoNotifier`:
 | `enabled` | Enable/disable video notifier | true |
 | `checkInterval` | How often to check for new videos (ms) | 300000 (5 min) |
 | `notificationChannelId` | Discord channel ID for notifications | "" |
+| `youtubeNotificationChannelId` | Separate channel for YouTube notifications (optional) | "" |
+| `tiktokNotificationChannelId` | Separate channel for TikTok notifications (optional) | "" |
 | `youtube.enabled` | Enable YouTube monitoring | true |
 | `tiktok.enabled` | Enable TikTok monitoring | true |
 | `embedSettings.includeDescription` | Include video description in embed | true |
@@ -184,7 +208,9 @@ Notifications include:
 - Configurable check interval (default: 5 minutes)
 - Tracks last known video to avoid duplicate notifications
 
-## Voice Channel Setup
+---
+
+## 🎤 Voice Channel Setup
 
 The bot provides multiple ways to create temporary voice channels:
 
@@ -206,7 +232,9 @@ The bot provides multiple ways to create temporary voice channels:
 3. When users join this specific voice channel, they are automatically moved to a new temporary channel created just for them
 4. The temporary channel is named after the user and configured according to the settings
 
-## Required Bot Permissions
+---
+
+## 🔐 Required Bot Permissions
 
 - `Manage Channels` - To create and delete voice channels
 - `Connect` - To move users between voice channels
@@ -214,7 +242,9 @@ The bot provides multiple ways to create temporary voice channels:
 - `Send Messages` - For commands and control panel
 - `Embed Links` - For rich embeds
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```
 utility-discord-bot/
@@ -244,7 +274,9 @@ utility-discord-bot/
 └── index.js          # Entry point
 ```
 
-## Extending the Bot
+---
+
+## 🛠️ Extending the Bot
 
 ### Adding a New Command
 Create a new file in `commands/`:
@@ -284,6 +316,23 @@ export default {
 };
 ```
 
-## License
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open an issue or submit a pull request.
+
+---
+
+## 📝 License
 
 ISC
+
+---
+
+## 👤 Author
+
+**Davidf aka darynx**
+
+- GitHub: [@Davidf1121](https://github.com/Davidf1121)
+- Project: [utility-discord-bot](https://github.com/Davidf1121/utility-discord-bot)

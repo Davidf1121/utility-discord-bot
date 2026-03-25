@@ -24,7 +24,11 @@
   "videoNotifier": {
     "enabled": true,
     "checkInterval": 300000,
+    "_comment": "notificationChannelId: Discord channel ID where video notifications will be posted (separate from controlChannelId used for voice channel controls)",
     "notificationChannelId": "",
+    "_comment_separate_channels": "Optionally use separate channels for YouTube and TikTok notifications below (leave empty to use notificationChannelId for both)",
+    "youtubeNotificationChannelId": "",
+    "tiktokNotificationChannelId": "",
     "youtube": {
       "enabled": true,
       "channels": []

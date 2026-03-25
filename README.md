@@ -6,12 +6,15 @@
 
 A modular, configurable Discord bot with utility functionality built with Discord.js v14 and JavaScript.
 
+**Bot Author:** Davidf aka darynx
+
 ---
 
 ## ✨ Features
 
 - **🎤 Temporary Voice Channels**: Create custom voice channels that auto-delete when empty
 - **📺 Video Notifier**: Monitor YouTube/TikTok channels and get notifications when new content is posted
+- **🐙 GitHub Integration**: Receive Discord notifications for GitHub events (pushes, pull requests, issues)
 - **🧩 Modular Architecture**: Easy to extend with new commands and features
 - **⚙️ Configuration-Based**: All settings externalized in `config.json`
 - **🔄 Multiple Creation Methods**:
@@ -112,20 +115,43 @@ npm run dev
 
 ## 📋 Commands
 
+### General Commands
+
 | Command | Description |
 |---------|-------------|
 | `/ping` | Check bot latency |
-| `/create` | Open channel creation modal |
-| `/setup` | Send control panel to current channel |
-| `/help` | Display available commands |
-| `/videonotifier` | Manage video notifications (requires Admin) |
-| &nbsp;&nbsp;`/videonotifier list` | List all monitored channels |
-| &nbsp;&nbsp;`/videonotifier add-youtube` | Add a YouTube channel to monitor |
-| &nbsp;&nbsp;`/videonotifier remove-youtube` | Remove a YouTube channel |
-| &nbsp;&nbsp;`/videonotifier add-tiktok` | Add a TikTok channel to monitor |
-| &nbsp;&nbsp;`/videonotifier remove-tiktok` | Remove a TikTok channel |
-| &nbsp;&nbsp;`/videonotifier set-channel` | Set Discord notification channel |
-| &nbsp;&nbsp;`/videonotifier toggle` | Toggle video notifier on/off |
+| `/help` | Display available commands and bot information |
+
+### Voice Channel Commands
+
+| Command | Description |
+|---------|-------------|
+| `/create` | Open the channel creation modal form |
+| `/setup` | Send the control panel with a creation button to the current channel |
+
+### Video Notifier Commands (Admin Only)
+
+| Command | Description |
+|---------|-------------|
+| `/videonotifier list` | List all monitored channels and status |
+| `/videonotifier add-youtube` | Add a YouTube channel to monitor |
+| `/videonotifier remove-youtube` | Remove a YouTube channel from monitoring |
+| `/videonotifier add-tiktok` | Add a TikTok channel to monitor |
+| `/videonotifier remove-tiktok` | Remove a TikTok channel from monitoring |
+| `/videonotifier set-channel` | Set the Discord channel for video notifications |
+| `/videonotifier toggle` | Enable or disable video notifications |
+| `/videonotifier test-youtube` | Send a test YouTube notification |
+| `/videonotifier test-tiktok` | Send a test TikTok notification |
+
+### GitHub Integration Commands (Admin Only)
+
+| Command | Description |
+|---------|-------------|
+| `/github status` | Show GitHub notifier status |
+| `/github set-channel` | Set the Discord channel for GitHub notifications |
+| `/github set-port` | Set the port for the GitHub webhook server |
+| `/github toggle` | Enable or disable GitHub notifications |
+| `/github test-push` | Send a test GitHub push notification |
 
 ---
 
@@ -150,6 +176,11 @@ The video notifier monitors YouTube and TikTok channels and sends Discord notifi
    /videonotifier set-channel channel:#announcements
    ```
 
+4. **Test the setup**:
+   ```
+   /videonotifier test-youtube
+   ```
+
 ### Setting Up TikTok Notifications
 
 1. **Get the TikTok username**:
@@ -165,11 +196,17 @@ The video notifier monitors YouTube and TikTok channels and sends Discord notifi
    /videonotifier set-channel channel:#announcements
    ```
 
+4. **Test the setup**:
+   ```
+   /videonotifier test-tiktok
+   ```
+
 ### Managing Notifications
 
 - **List all channels**: `/videonotifier list`
 - **Remove a channel**: `/videonotifier remove-youtube` or `/videonotifier remove-tiktok`
 - **Toggle on/off**: `/videonotifier toggle`
+- **Test notifications**: `/videonotifier test-youtube` or `/videonotifier test-tiktok`
 
 ### Configuration Options
 
@@ -203,6 +240,64 @@ Notifications include:
 - TikTok: Uses `https://www.tiktok.com/@username/rss`
 - Configurable check interval (default: 5 minutes)
 - Tracks last known video to avoid duplicate notifications
+
+---
+
+## 🐙 GitHub Integration Setup
+
+The GitHub integration receives webhook events and sends Discord notifications for pushes, pull requests, and issues.
+
+### Setting Up GitHub Webhooks
+
+1. **Set the notification channel**:
+   ```
+   /github set-channel channel:#github-notifications
+   ```
+
+2. **Configure the webhook server port** (optional, default: 3000):
+   ```
+   /github set-port port:3000
+   ```
+
+3. **Check status**:
+   ```
+   /github status
+   ```
+
+4. **Test the setup**:
+   ```
+   /github test-push
+   ```
+
+### Configuring GitHub Repository Webhooks
+
+1. Go to your GitHub repository settings
+2. Navigate to "Webhooks" > "Add webhook"
+3. Set Payload URL to: `http://your-server-ip:3000/github-webhook`
+4. Set Content type to: `application/json`
+5. Select events: Pushes, Pull requests, Issues
+6. Click "Add webhook"
+
+### Configuration Options
+
+In `config.json`, under `github`:
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `enabled` | Enable/disable GitHub notifier | true |
+| `port` | Port for webhook server | 3000 |
+| `notificationChannelId` | Discord channel ID for notifications | "" |
+| `secret` | Webhook secret for verification (optional) | "" |
+| `embedColors.push` | Color for push notifications | 5793287 (Green) |
+| `embedColors.pull_request` | Color for PR notifications | 5783218 (Blurple) |
+| `embedColors.issues` | Color for issue notifications | 15548997 (Red) |
+| `embedColors.default` | Default color | 10197915 |
+
+### Supported GitHub Events
+
+- **Push**: Shows commit list with author, commit hash, and message
+- **Pull Request**: Shows PR open/close/merge events with description
+- **Issues**: Shows issue open/close events with description
 
 ---
 
@@ -249,7 +344,8 @@ utility-discord-bot/
 │   ├── create.js
 │   ├── setup.js
 │   ├── help.js
-│   └── videonotifier.js
+│   ├── videonotifier.js
+│   └── github.js
 ├── components/         # Button and modal handlers
 │   ├── CreateTempChannelButton.js
 │   └── CreateTempChannelModal.js
@@ -262,6 +358,7 @@ utility-discord-bot/
 │   ├── Logger.js
 │   ├── TempChannelManager.js
 │   ├── VideoNotifierManager.js
+│   ├── GitHubNotifierManager.js
 │   └── fileLoader.js
 ├── config.json        # Bot configuration
 ├── .env.example       # Environment variables template
@@ -323,3 +420,7 @@ Contributions are welcome! Feel free to open an issue or submit a pull request.
 ## 📝 License
 
 ISC
+
+---
+
+**Created by Davidf aka darynx**

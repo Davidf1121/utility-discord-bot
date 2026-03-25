@@ -1,5 +1,7 @@
 # Video Notifier Feature Implementation
 
+**Bot Author:** Davidf aka darynx
+
 ## Overview
 Implemented a YouTube/TikTok upload notifier feature that monitors channels and sends embedded video notifications with thumbnails and links to Discord.
 
@@ -13,6 +15,8 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
   - `enabled`: Toggle feature on/off
   - `checkInterval`: Polling interval (default: 5 minutes)
   - `notificationChannelId`: Discord channel for notifications
+  - `youtubeNotificationChannelId`: Separate channel for YouTube notifications (optional)
+  - `tiktokNotificationChannelId`: Separate channel for TikTok notifications (optional)
   - `youtube.enabled`: Enable YouTube monitoring
   - `youtube.channels`: Array of YouTube channels to monitor
   - `tiktok.enabled`: Enable TikTok monitoring
@@ -37,25 +41,28 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
   - Methods for adding/removing channels
   - Methods for listing channels
   - Methods for updating configuration
+  - Test notification methods for YouTube and TikTok
   - YouTube: Uses `https://www.youtube.com/feeds/videos.xml?channel_id=`
   - TikTok: Uses `https://www.tiktok.com/@username/rss`
 
 ### 6. `commands/videonotifier.js` (NEW)
 - Slash command with subcommands:
-  - `list`: List all monitored channels
+  - `list`: List all monitored channels and status
   - `add-youtube`: Add a YouTube channel (requires channel ID, optional label)
   - `remove-youtube`: Remove a YouTube channel
   - `add-tiktok`: Add a TikTok channel (requires username, optional label)
   - `remove-tiktok`: Remove a TikTok channel
   - `set-channel`: Set Discord notification channel
   - `toggle`: Toggle video notifier on/off
+  - `test-youtube`: Send a test YouTube notification
+  - `test-tiktok`: Send a test TikTok notification
 - Requires Administrator permission
 - Provides rich embed responses
 
 ### 7. `README.md`
 - Updated features list
 - Added Video Notifier section with setup instructions
-- Updated commands table
+- Updated commands table with test commands
 - Updated project structure
 - Added configuration options table
 
@@ -65,12 +72,14 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
 ```
 /videonotifier set-channel channel:#announcements
 /videonotifier add-youtube channel-id:UCxxxxxxxxxxxxx label:"My Favorite Channel"
+/videonotifier test-youtube
 ```
 
 ### Setup TikTok Notifications:
 ```
 /videonotifier set-channel channel:#announcements
 /videonotifier add-tiktok username:favoriteuser label:"TikTok Creator"
+/videonotifier test-tiktok
 ```
 
 ### Monitor Status:
@@ -103,6 +112,11 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
   - Channel label with TikTok icon
   - Timestamp
 
+### Test Notifications
+- `/videonotifier test-youtube` - Sends a test YouTube notification
+- `/videonotifier test-tiktok` - Sends a test TikTok notification
+- Useful for verifying configuration without waiting for new uploads
+
 ### Error Handling
 - Gracefully handles RSS feed failures without crashing
 - Logs errors with context (which channel failed and why)
@@ -119,12 +133,14 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
 
 1. **No API Keys Required**: Uses public RSS feeds
 2. **Easy to Use**: Simple slash commands for management
-3. **Configurable**: Adjust check interval, embed settings, etc.
-4. **Duplicate Prevention**: Tracks last video to avoid spam
-5. **Rich Notifications**: Beautiful embeds with thumbnails (YouTube)
-6. **Multi-Platform**: Supports both YouTube and TikTok
-7. **Admin Control**: Requires admin permissions to manage
-8. **Non-Intrusive**: Only notifies when NEW content is posted
+3. **Test Commands**: Verify setup with test notifications
+4. **Configurable**: Adjust check interval, embed settings, etc.
+5. **Duplicate Prevention**: Tracks last video to avoid spam
+6. **Rich Notifications**: Beautiful embeds with thumbnails (YouTube)
+7. **Multi-Platform**: Supports both YouTube and TikTok
+8. **Admin Control**: Requires admin permissions to manage
+9. **Non-Intrusive**: Only notifies when NEW content is posted
+10. **Separate Channels**: Optional separate channels for YouTube and TikTok
 
 ## Future Enhancements (Optional)
 
@@ -134,3 +150,7 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
 - Custom embed colors per channel
 - Filter by keywords in video title
 - Support for more platforms (Instagram, Twitter, etc.)
+
+---
+
+**Created by Davidf aka darynx**

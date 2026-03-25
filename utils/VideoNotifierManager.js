@@ -316,4 +316,52 @@ export class VideoNotifierManager {
     this.config.videoNotifier = { ...this.config.videoNotifier, ...newConfig };
     return { success: true, message: 'Config updated' };
   }
+
+  async sendTestYouTubeNotification(channelId, videoData = null) {
+    const testVideo = videoData || {
+      title: 'Test YouTube Video',
+      link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      pubDate: new Date().toISOString(),
+      contentSnippet: 'This is a test YouTube notification description.',
+      videoId: 'dQw4w9WgXcQ'
+    };
+    
+    const targetChannelId = channelId || this.config.videoNotifier.notificationChannelId;
+    
+    if (!targetChannelId) {
+      throw new Error('No notification channel configured');
+    }
+
+    const channel = await this.client.channels.fetch(targetChannelId);
+    if (!channel) {
+      throw new Error(`Notification channel not found: ${targetChannelId}`);
+    }
+
+    const embed = this.createEmbed(testVideo, 'youtube', 'Test Channel');
+    await channel.send({ content: '🔔 **Test YouTube Notification**', embeds: [embed] });
+  }
+
+  async sendTestTikTokNotification(channelId, videoData = null) {
+    const testVideo = videoData || {
+      title: 'Test TikTok Video',
+      link: 'https://www.tiktok.com/@test/video/1234567890',
+      pubDate: new Date().toISOString(),
+      contentSnippet: 'This is a test TikTok notification description.',
+      guid: 'video/1234567890'
+    };
+    
+    const targetChannelId = channelId || this.config.videoNotifier.notificationChannelId;
+    
+    if (!targetChannelId) {
+      throw new Error('No notification channel configured');
+    }
+
+    const channel = await this.client.channels.fetch(targetChannelId);
+    if (!channel) {
+      throw new Error(`Notification channel not found: ${targetChannelId}`);
+    }
+
+    const embed = this.createEmbed(testVideo, 'tiktok', 'Test User');
+    await channel.send({ content: '🔔 **Test TikTok Notification**', embeds: [embed] });
+  }
 }

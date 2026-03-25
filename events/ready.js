@@ -20,5 +20,9 @@ export default {
         logger.warn(`Control channel not found: ${config.controlChannelId}`);
       }
     }
+
+    if (config.features?.videoNotifier && client.videoNotifierManager) {
+      client.videoNotifierManager.start();
+    }
   }
 };

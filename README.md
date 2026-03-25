@@ -5,6 +5,7 @@ A modular, configurable Discord bot with temporary voice channel functionality b
 ## Features
 
 - **Temporary Voice Channels**: Create custom voice channels that auto-delete when empty
+- **Video Notifier**: Monitor YouTube/TikTok channels and get notifications when new content is posted
 - **Modular Architecture**: Easy to extend with new commands and features
 - **Configuration-Based**: All settings externalized in `config.json`
 - **Multiple Creation Methods**:
@@ -101,6 +102,87 @@ npm run dev
 | `/create` | Open channel creation modal |
 | `/setup` | Send control panel to current channel |
 | `/help` | Display available commands |
+| `/videonotifier` | Manage video notifications (requires Admin) |
+| &nbsp;&nbsp;`/videonotifier list` | List all monitored channels |
+| &nbsp;&nbsp;`/videonotifier add-youtube` | Add a YouTube channel to monitor |
+| &nbsp;&nbsp;`/videonotifier remove-youtube` | Remove a YouTube channel |
+| &nbsp;&nbsp;`/videonotifier add-tiktok` | Add a TikTok channel to monitor |
+| &nbsp;&nbsp;`/videonotifier remove-tiktok` | Remove a TikTok channel |
+| &nbsp;&nbsp;`/videonotifier set-channel` | Set Discord notification channel |
+| &nbsp;&nbsp;`/videonotifier toggle` | Toggle video notifier on/off |
+
+## Video Notifier Setup
+
+The video notifier monitors YouTube and TikTok channels and sends Discord notifications when new content is posted.
+
+### Setting Up YouTube Notifications
+
+1. **Get the YouTube Channel ID**:
+   - Go to the channel's page
+   - Look at the URL: `https://www.youtube.com/channel/CHANNEL_ID` or `https://www.youtube.com/@username`
+   - The channel ID is the string after `/channel/` or you can use the username
+
+2. **Add the channel**:
+   ```
+   /videonotifier add-youtube channel-id:UCxxxxxxxxxxxxx label:"Favorite Channel"
+   ```
+
+3. **Set the notification channel**:
+   ```
+   /videonotifier set-channel channel:#announcements
+   ```
+
+### Setting Up TikTok Notifications
+
+1. **Get the TikTok username**:
+   - The username is the handle without the @ (e.g., "username" from "@username")
+
+2. **Add the channel**:
+   ```
+   /videonotifier add-tiktok username:favoriteuser label:"TikTok Star"
+   ```
+
+3. **Set the notification channel**:
+   ```
+   /videonotifier set-channel channel:#announcements
+   ```
+
+### Managing Notifications
+
+- **List all channels**: `/videonotifier list`
+- **Remove a channel**: `/videonotifier remove-youtube` or `/videonotifier remove-tiktok`
+- **Toggle on/off**: `/videonotifier toggle`
+
+### Configuration Options
+
+In `config.json`, under `videoNotifier`:
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `enabled` | Enable/disable video notifier | true |
+| `checkInterval` | How often to check for new videos (ms) | 300000 (5 min) |
+| `notificationChannelId` | Discord channel ID for notifications | "" |
+| `youtube.enabled` | Enable YouTube monitoring | true |
+| `tiktok.enabled` | Enable TikTok monitoring | true |
+| `embedSettings.includeDescription` | Include video description in embed | true |
+| `embedSettings.descriptionLength` | Max description length | 200 |
+
+### Notification Embed Format
+
+Notifications include:
+- Video title (clickable link)
+- Thumbnail (YouTube only)
+- Description snippet
+- Channel label
+- Timestamp
+
+### Notes
+
+- The bot uses RSS feeds to monitor channels - no API keys required
+- YouTube: Uses `https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID`
+- TikTok: Uses `https://www.tiktok.com/@username/rss`
+- Configurable check interval (default: 5 minutes)
+- Tracks last known video to avoid duplicate notifications
 
 ## Voice Channel Setup
 
@@ -140,7 +222,8 @@ utility-discord-bot/
 │   ├── ping.js
 │   ├── create.js
 │   ├── setup.js
-│   └── help.js
+│   ├── help.js
+│   └── videonotifier.js
 ├── components/         # Button and modal handlers
 │   ├── CreateTempChannelButton.js
 │   └── CreateTempChannelModal.js
@@ -152,6 +235,7 @@ utility-discord-bot/
 │   ├── ConfigLoader.js
 │   ├── Logger.js
 │   ├── TempChannelManager.js
+│   ├── VideoNotifierManager.js
 │   └── fileLoader.js
 ├── config.json        # Bot configuration
 ├── .env.example       # Environment variables template

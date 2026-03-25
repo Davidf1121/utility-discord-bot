@@ -1,0 +1,23 @@
+{
+  "clientId": "",
+  "guildId": "",
+  "controlChannelId": "",
+  "voiceCategoryId": "",
+  "tempChannelSettings": {
+    "deleteDelay": 5000,
+    "defaultUserLimit": 10,
+    "bitrate": 64000,
+    "allowNameChange": true,
+    "allowUserLimitChange": true
+  },
+  "embedColors": {
+    "primary": 5783218,
+    "success": 5793287,
+    "warning": 16775964,
+    "error": 15548997
+  },
+  "features": {
+    "tempVoiceChannels": true,
+    "autoCleanup": true
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "utility-discord-bot",
+  "version": "1.0.0",
+  "description": "A modular Discord bot with temporary voice channel feature",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "discord.js",
+    "voice-channels"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.16.3"
+  }
+}

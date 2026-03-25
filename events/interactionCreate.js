@@ -1,0 +1,75 @@
+import { createLogger } from '../utils/Logger.js';
+
+const logger = createLogger('InteractionEvent');
+
+export default {
+  name: 'interactionCreate',
+  async execute(interaction) {
+    if (interaction.isChatInputCommand()) {
+      const command = interaction.client.commands.get(interaction.commandName);
+      if (!command) {
+        logger.warn(`No command matching ${interaction.commandName} was found.`);
+        return;
+      }
+      
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        logger.error(`Error executing ${interaction.commandName}:`, error);
+        
+        const errorMessage = {
+          content: 'There was an error while executing this command!',
+          ephemeral: true
+        };
+        
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp(errorMessage);
+        } else {
+          await interaction.reply(errorMessage);
+        }
+      }
+    }
+    
+    if (interaction.isButton()) {
+      const component = interaction.client.components?.get(interaction.customId);
+      if (!component) {
+        logger.warn(`No component matching ${interaction.customId} was found.`);
+        return;
+      }
+      
+      try {
+        await component.execute(interaction);
+      } catch (error) {
+        logger.error(`Error executing button ${interaction.customId}:`, error);
+        const replyOptions = { content: 'There was an error handling this interaction!', ephemeral: true };
+        
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp(replyOptions);
+        } else {
+          await interaction.reply(replyOptions);
+        }
+      }
+    }
+    
+    if (interaction.isModalSubmit()) {
+      const component = interaction.client.components?.get(interaction.customId);
+      if (!component) {
+        logger.warn(`No component matching ${interaction.customId} was found.`);
+        return;
+      }
+      
+      try {
+        await component.execute(interaction);
+      } catch (error) {
+        logger.error(`Error executing modal ${interaction.customId}:`, error);
+        const replyOptions = { content: 'There was an error handling this interaction!', ephemeral: true };
+        
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp(replyOptions);
+        } else {
+          await interaction.reply(replyOptions);
+        }
+      }
+    }
+  }
+};

@@ -1,0 +1,45 @@
+{
+  "bot": {
+    "name": "Utility Bot",
+    "description": "A modular Discord bot with temp voice channel features",
+    "activity": {
+      "type": "WATCHING",
+      "text": "voice channels"
+    }
+  },
+  "features": {
+    "tempVoiceChannels": {
+      "enabled": true,
+      "controlChannelId": "",
+      "voiceCategoryId": "",
+      "defaultSettings": {
+        "name": "🔊 {user}'s Channel",
+        "userLimit": 10,
+        "bitrate": 64000,
+        "locked": false
+      },
+      "cleanup": {
+        "emptyChannelTimeoutMs": 30000,
+        "maxChannelsPerUser": 1
+      },
+      "ui": {
+        "buttonLabel": "Create Voice Channel",
+        "buttonEmoji": "🔊",
+        "buttonStyle": "Primary",
+        "embedTitle": "Create Your Voice Channel",
+        "embedDescription": "Click the button below to create your own temporary voice channel with custom settings!",
+        "embedColor": 3447003
+      }
+    }
+  },
+  "logging": {
+    "level": "info",
+    "console": true,
+    "file": {
+      "enabled": false,
+      "path": "./logs",
+      "maxFiles": 5,
+      "maxSize": "10m"
+    }
+  }
+}

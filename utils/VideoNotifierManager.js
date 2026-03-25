@@ -170,15 +170,29 @@ export class VideoNotifierManager {
     if (platform === 'youtube') {
       const thumbnail = this.getYouTubeThumbnail(video);
       if (thumbnail) {
-        embed.setThumbnail(thumbnail);
+        embed.setImage(thumbnail);
       }
       embed.setAuthor({
         name: channelLabel || 'YouTube',
+        iconURL: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png',
+        url: video.link
+      });
+      embed.setFooter({
+        text: 'YouTube',
         iconURL: 'https://www.youtube.com/favicon.ico'
       });
     } else if (platform === 'tiktok') {
+      const thumbnail = this.getTikTokThumbnail(video);
+      if (thumbnail) {
+        embed.setImage(thumbnail);
+      }
       embed.setAuthor({
         name: channelLabel || 'TikTok',
+        iconURL: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png',
+        url: video.link
+      });
+      embed.setFooter({
+        text: 'TikTok',
         iconURL: 'https://www.tiktok.com/favicon.ico'
       });
     }
@@ -188,21 +202,39 @@ export class VideoNotifierManager {
 
   getYouTubeThumbnail(video) {
     if (video.mediaThumbnail && video.mediaThumbnail.$.url) {
+      return video.mediaThumbnail.$.url.replace('mqdefault', 'hqdefault');
+    }
+    if (video.mediaGroup && video.mediaGroup['media:thumbnail'] && video.mediaGroup['media:thumbnail'][0]) {
+      return video.mediaGroup['media:thumbnail'][0].$.url.replace('mqdefault', 'hqdefault');
+    }
+    if (video.videoId) {
+      return `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+    }
+    if (video.link) {
+      const videoId = this.extractYouTubeVideoId(video.link);
+      if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      }
+    }
+    return null;
+  }
+
+  getTikTokThumbnail(video) {
+    if (video.mediaThumbnail && video.mediaThumbnail.$.url) {
       return video.mediaThumbnail.$.url;
     }
     if (video.mediaGroup && video.mediaGroup['media:thumbnail'] && video.mediaGroup['media:thumbnail'][0]) {
       return video.mediaGroup['media:thumbnail'][0].$.url;
     }
-    if (video.videoId) {
-      return `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
+    
+    // Check for images in content
+    if (video.content) {
+      const match = video.content.match(/<img[^>]+src="([^">]+)"/);
+      if (match) return match[1];
     }
-    if (video.link) {
-      const videoId = this.extractYouTubeVideoId(video.link);
-      if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-      }
-    }
-    return null;
+
+    // Default TikTok placeholder
+    return 'https://i.imgur.com/vHdfY9S.png';
   }
 
   extractYouTubeVideoId(url) {

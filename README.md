@@ -1,6 +1,6 @@
 # Utility Discord Bot
 
-A modular, configurable Discord bot with temporary voice channel functionality built with Discord.js v14 and JavaScript.
+A modular, configurable Discord bot with utility stuff functionality built with Discord.js v14 and JavaScript.
 
 ## Features
 

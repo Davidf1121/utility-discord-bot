@@ -1,4 +1,5 @@
 import { createLogger } from './Logger.js';
+import { pingBedrock as pingBedrockImpl } from './MinecraftPingBedrock.js';
 
 export class MinecraftPing {
   constructor(config) {
@@ -74,14 +75,11 @@ export class MinecraftPing {
   }
 
   async pingBedrock(host, port = null) {
-    const mcp = await import('@l2studio/minecraft-ping');
-    const ping = mcp.default.default;
-    const Server = mcp.default.Server;
     const defaultPort = 19132;
     const targetPort = port || defaultPort;
 
     try {
-      const response = await ping(Server.BEDROCK, {
+      const response = await pingBedrockImpl({
         host,
         port: targetPort,
         timeout: this.timeout

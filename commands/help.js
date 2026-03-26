@@ -87,8 +87,8 @@ export default {
       .setTimestamp()
       // GitHub Notifier Section
       .addFields(
-        { 
-          name: '🐙 GitHub Notifier (Admin Only)', 
+        {
+          name: '🐙 GitHub Notifier (Admin Only)',
           value: [
             'Receive notifications for GitHub repository events like pushes, pull requests, and issues.',
             '',
@@ -102,8 +102,34 @@ export default {
             '• Pull request open/close/merge notifications',
             '• Issue open/close notifications',
             '• Configurable webhook path and port'
-          ].join('\n'), 
-          inline: false 
+          ].join('\n'),
+          inline: false
+        }
+      )
+
+      // Minecraft Server Section
+      .addFields(
+        {
+          name: '🎮 Minecraft Server Ping (Admin Only)',
+          value: [
+            'Query Minecraft servers to display status, player count, version, MOTD, latency, server type, and favicon.',
+            '',
+            '`/mcsrv ping` - Ping a server by address (e.g., play.example.com:25565)',
+            '`/mcsrv list` - Show all saved servers',
+            '`/mcsrv add` - Save a server for quick access',
+            '`/mcsrv remove` - Remove a saved server',
+            '`/mcsrv info` - Get detailed info about a saved server',
+            '',
+            '**Features:**',
+            '• Support for Java and Bedrock editions',
+            '• Server type detection (Vanilla, Paper, Spigot, Fabric, etc.)',
+            '• Favicon display as embed thumbnail',
+            '• Player count and sample players',
+            '• Latency measurement',
+            '• Custom server names and descriptions',
+            '• Network-only ping (no SFTP required)'
+          ].join('\n'),
+          inline: false
         }
       )
       

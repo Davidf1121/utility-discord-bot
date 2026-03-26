@@ -3,6 +3,7 @@ import { EmbedBuilder } from 'discord.js';
 import express from 'express';
 import bodyParser from 'body-parser';
 import crypto from 'crypto';
+import { saveConfig } from './ConfigLoader.js';
 
 export class GitHubNotifierManager {
   constructor(client, config) {
@@ -191,7 +192,7 @@ export class GitHubNotifierManager {
     return embed;
   }
 
-  updateConfig(newConfig) {
+  async updateConfig(newConfig) {
     this.config.github = { ...this.config.github, ...newConfig };
     
     // Restart if necessary (port changed)
@@ -204,7 +205,8 @@ export class GitHubNotifierManager {
       this.stop();
     }
     
-    return { success: true, message: 'GitHub config updated' };
+    await saveConfig(this.config);
+    return { success: true, message: 'GitHub config updated and saved' };
   }
   
   async sendTestPushNotification() {

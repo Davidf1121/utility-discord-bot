@@ -167,7 +167,7 @@ async function handleAddYouTube(interaction, manager) {
   const channelId = interaction.options.getString('channel-id');
   const label = interaction.options.getString('label');
 
-  const result = manager.addYouTubeChannel(channelId, label);
+  const result = await manager.addYouTubeChannel(channelId, label);
   
   if (result.success) {
     await interaction.reply({
@@ -185,7 +185,7 @@ async function handleAddYouTube(interaction, manager) {
 async function handleRemoveYouTube(interaction, manager) {
   const channelId = interaction.options.getString('channel-id');
 
-  const result = manager.removeYouTubeChannel(channelId);
+  const result = await manager.removeYouTubeChannel(channelId);
   
   if (result.success) {
     await interaction.reply({
@@ -204,7 +204,7 @@ async function handleAddTikTok(interaction, manager) {
   const username = interaction.options.getString('username');
   const label = interaction.options.getString('label');
 
-  const result = manager.addTikTokChannel(username, label);
+  const result = await manager.addTikTokChannel(username, label);
   
   if (result.success) {
     await interaction.reply({
@@ -222,7 +222,7 @@ async function handleAddTikTok(interaction, manager) {
 async function handleRemoveTikTok(interaction, manager) {
   const username = interaction.options.getString('username');
 
-  const result = manager.removeTikTokChannel(username);
+  const result = await manager.removeTikTokChannel(username);
   
   if (result.success) {
     await interaction.reply({
@@ -240,7 +240,7 @@ async function handleRemoveTikTok(interaction, manager) {
 async function handleSetChannel(interaction, manager) {
   const channel = interaction.options.getChannel('channel');
   
-  const result = manager.updateConfig({ notificationChannelId: channel.id });
+  const result = await manager.updateConfig({ notificationChannelId: channel.id });
   
   if (result.success) {
     await interaction.reply({
@@ -259,7 +259,7 @@ async function handleToggle(interaction, manager) {
   const currentStatus = manager.config.videoNotifier?.enabled ?? true;
   const newStatus = !currentStatus;
   
-  const result = manager.updateConfig({ enabled: newStatus });
+  const result = await manager.updateConfig({ enabled: newStatus });
   
   if (result.success) {
     if (newStatus) {

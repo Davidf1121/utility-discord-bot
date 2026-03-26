@@ -64,7 +64,7 @@ export default {
 
 async function handleSetChannel(interaction, manager) {
   const channel = interaction.options.getChannel('channel');
-  const result = manager.updateConfig({ notificationChannelId: channel.id });
+  const result = await manager.updateConfig({ notificationChannelId: channel.id });
   
   if (result.success) {
     await interaction.reply({
@@ -81,7 +81,7 @@ async function handleSetChannel(interaction, manager) {
 
 async function handleSetPort(interaction, manager) {
   const port = interaction.options.getInteger('port');
-  const result = manager.updateConfig({ port });
+  const result = await manager.updateConfig({ port });
   
   if (result.success) {
     await interaction.reply({
@@ -100,7 +100,7 @@ async function handleToggle(interaction, manager) {
   const currentStatus = manager.config.github?.enabled ?? true;
   const newStatus = !currentStatus;
   
-  const result = manager.updateConfig({ enabled: newStatus });
+  const result = await manager.updateConfig({ enabled: newStatus });
   
   if (result.success) {
     await interaction.reply({

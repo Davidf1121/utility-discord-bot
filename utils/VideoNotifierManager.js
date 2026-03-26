@@ -1,11 +1,13 @@
 import { createLogger } from './Logger.js';
 import { EmbedBuilder } from 'discord.js';
 import Parser from 'rss-parser';
+import { saveConfig } from './ConfigLoader.js';
 
 export class VideoNotifierManager {
-  constructor(client, config) {
+  constructor(client, config, configPath = null) {
     this.client = client;
     this.config = config;
+    this.configPath = configPath;
     this.logger = createLogger('VideoNotifier');
     this.parser = new Parser({
       timeout: 10000,
@@ -260,11 +262,29 @@ export class VideoNotifierManager {
     return guid;
   }
 
-  addYouTubeChannel(channelId, label) {
+  validateYouTubeChannelId(channelId) {
+    if (!channelId) return false;
+    // YouTube channel IDs start with UC followed by 22 characters (total 24)
+    const youtubeIdRegex = /^UC[a-zA-Z0-9_-]{22}$/;
+    return youtubeIdRegex.test(channelId);
+  }
+
+  async persistConfig() {
+    return saveConfig(this.config);
+  }
+
+  async addYouTubeChannel(channelId, label) {
     if (!this.config.videoNotifier.youtube.channels) {
       this.config.videoNotifier.youtube.channels = [];
     }
     
+    if (!this.validateYouTubeChannelId(channelId)) {
+      return { 
+        success: false, 
+        message: 'Invalid YouTube Channel ID format. YouTube channel IDs should start with "UC" followed by 22 characters. Example: UCxxxxxxxxxxxxxxxxxxxxxx. \n\nTip: This is NOT your username or handle (@username). You can find your Channel ID in YouTube Settings > Advanced Settings.' 
+      };
+    }
+
     const existing = this.config.videoNotifier.youtube.channels.find(
       c => c.channelId === channelId
     );
@@ -274,10 +294,11 @@ export class VideoNotifierManager {
     }
     
     this.config.videoNotifier.youtube.channels.push({ channelId, label });
-    return { success: true, message: 'YouTube channel added' };
+    await this.persistConfig();
+    return { success: true, message: 'YouTube channel added and config saved' };
   }
 
-  removeYouTubeChannel(channelId) {
+  async removeYouTubeChannel(channelId) {
     if (!this.config.videoNotifier.youtube.channels) {
       return { success: false, message: 'No channels configured' };
     }
@@ -291,10 +312,11 @@ export class VideoNotifierManager {
     }
     
     this.config.videoNotifier.youtube.channels.splice(index, 1);
-    return { success: true, message: 'YouTube channel removed' };
+    await this.persistConfig();
+    return { success: true, message: 'YouTube channel removed and config saved' };
   }
 
-  addTikTokChannel(username, label) {
+  async addTikTokChannel(username, label) {
     if (!this.config.videoNotifier.tiktok.channels) {
       this.config.videoNotifier.tiktok.channels = [];
     }
@@ -308,10 +330,11 @@ export class VideoNotifierManager {
     }
     
     this.config.videoNotifier.tiktok.channels.push({ username, label });
-    return { success: true, message: 'TikTok channel added' };
+    await this.persistConfig();
+    return { success: true, message: 'TikTok channel added and config saved' };
   }
 
-  removeTikTokChannel(username) {
+  async removeTikTokChannel(username) {
     if (!this.config.videoNotifier.tiktok.channels) {
       return { success: false, message: 'No channels configured' };
     }
@@ -325,7 +348,8 @@ export class VideoNotifierManager {
     }
     
     this.config.videoNotifier.tiktok.channels.splice(index, 1);
-    return { success: true, message: 'TikTok channel removed' };
+    await this.persistConfig();
+    return { success: true, message: 'TikTok channel removed and config saved' };
   }
 
   listChannels() {
@@ -344,9 +368,10 @@ export class VideoNotifierManager {
     };
   }
 
-  updateConfig(newConfig) {
+  async updateConfig(newConfig) {
     this.config.videoNotifier = { ...this.config.videoNotifier, ...newConfig };
-    return { success: true, message: 'Config updated' };
+    await this.persistConfig();
+    return { success: true, message: 'Config updated and saved' };
   }
 
   async sendTestYouTubeNotification(channelId, videoData = null) {

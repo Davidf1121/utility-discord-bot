@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
 import { readFileSync } from 'fs';
-import { loadConfig } from './utils/ConfigLoader.js';
+import { loadConfig, configPath } from './utils/ConfigLoader.js';
 import { createLogger } from './utils/Logger.js';
 import { TempChannelManager } from './utils/TempChannelManager.js';
 import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
@@ -27,7 +27,7 @@ const client = new Client({
 client.commands = new Collection();
 
 const tempChannelManager = new TempChannelManager(client, config);
-const videoNotifierManager = new VideoNotifierManager(client, config);
+const videoNotifierManager = new VideoNotifierManager(client, config, configPath);
 const githubNotifierManager = new GitHubNotifierManager(client, config);
 const minecraftPing = new MinecraftPing(config);
 

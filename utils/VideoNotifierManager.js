@@ -269,6 +269,119 @@ export class VideoNotifierManager {
     return youtubeIdRegex.test(channelId);
   }
 
+  async validateYouTubeChannel(channelId) {
+    if (!this.validateYouTubeChannelId(channelId)) {
+      return {
+        success: false,
+        message: 'Invalid YouTube Channel ID format. Channel IDs should start with "UC" and be 24 characters long.'
+      };
+    }
+
+    try {
+      const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+      const feed = await this.parser.parseURL(rssUrl);
+
+      if (!feed.title && !feed.items?.length) {
+        return {
+          success: false,
+          message: 'Unable to fetch channel information. The channel may be private, deleted, or the ID is incorrect.'
+        };
+      }
+
+      const latestVideo = feed.items[0];
+      const channelInfo = {
+        title: feed.title || 'Unknown Channel',
+        author: feed.author || 'Unknown',
+        link: feed.link || '',
+        latestVideo: latestVideo ? {
+          title: latestVideo.title || 'No title',
+          link: latestVideo.link || '',
+          pubDate: latestVideo.pubDate || ''
+        } : null
+      };
+
+      return {
+        success: true,
+        message: 'Channel validated successfully',
+        channelInfo
+      };
+    } catch (error) {
+      this.logger.error(`Error validating YouTube channel ${channelId}:`, error);
+      if (error.message?.includes('timeout') || error.code === 'ETIMEDOUT') {
+        return {
+          success: false,
+          message: 'Request timed out while fetching channel information. Please try again.'
+        };
+      }
+      if (error.message?.includes('404') || error.status === 404) {
+        return {
+          success: false,
+          message: 'Channel not found. Please verify the Channel ID is correct.'
+        };
+      }
+      return {
+        success: false,
+        message: `Error validating channel: ${error.message}`
+      };
+    }
+  }
+
+  async validateTikTokChannel(username) {
+    if (!username || !/^[a-zA-Z0-9_.-]+$/.test(username)) {
+      return {
+        success: false,
+        message: 'Invalid TikTok username format. Username should only contain letters, numbers, dots, underscores, and hyphens.'
+      };
+    }
+
+    try {
+      const rssUrl = `https://www.tiktok.com/@${username}/rss`;
+      const feed = await this.parser.parseURL(rssUrl);
+
+      if (!feed.title && !feed.items?.length) {
+        return {
+          success: false,
+          message: 'Unable to fetch account information. The account may be private, deleted, or the username is incorrect.'
+        };
+      }
+
+      const latestVideo = feed.items[0];
+      const channelInfo = {
+        title: feed.title || username,
+        link: feed.link || `https://www.tiktok.com/@${username}`,
+        latestVideo: latestVideo ? {
+          title: latestVideo.title || 'No title',
+          link: latestVideo.link || '',
+          pubDate: latestVideo.pubDate || ''
+        } : null
+      };
+
+      return {
+        success: true,
+        message: 'Channel validated successfully',
+        channelInfo
+      };
+    } catch (error) {
+      this.logger.error(`Error validating TikTok channel ${username}:`, error);
+      if (error.message?.includes('timeout') || error.code === 'ETIMEDOUT') {
+        return {
+          success: false,
+          message: 'Request timed out while fetching account information. Please try again.'
+        };
+      }
+      if (error.message?.includes('404') || error.status === 404) {
+        return {
+          success: false,
+          message: 'Account not found. Please verify the username is correct.'
+        };
+      }
+      return {
+        success: false,
+        message: `Error validating account: ${error.message}`
+      };
+    }
+  }
+
   async persistConfig() {
     return saveConfig(this.config);
   }

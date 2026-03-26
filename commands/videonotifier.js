@@ -167,18 +167,68 @@ async function handleAddYouTube(interaction, manager) {
   const channelId = interaction.options.getString('channel-id');
   const label = interaction.options.getString('label');
 
+  await interaction.deferReply({ ephemeral: true });
+
+  const validation = await manager.validateYouTubeChannel(channelId);
+
+  if (!validation.success) {
+    const embed = {
+      color: manager.config.embedColors.error,
+      title: '❌ YouTube Channel Validation Failed',
+      fields: [
+        { name: 'Channel ID', value: channelId, inline: true },
+        { name: 'Error', value: validation.message, inline: false }
+      ],
+      timestamp: new Date()
+    };
+    return interaction.editReply({ embeds: [embed] });
+  }
+
   const result = await manager.addYouTubeChannel(channelId, label);
-  
+
   if (result.success) {
-    await interaction.reply({
-      content: `✅ ${result.message}\nChannel: ${label || channelId}\nID: ${channelId}`,
-      ephemeral: true
-    });
+    const channelInfo = validation.channelInfo;
+    const latestVideo = channelInfo.latestVideo;
+
+    const embed = {
+      color: manager.config.embedColors.success,
+      title: '✅ YouTube Channel Added Successfully',
+      thumbnail: {
+        url: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+      },
+      fields: [
+        { name: 'Channel Name', value: channelInfo.title, inline: true },
+        { name: 'Channel ID', value: channelId, inline: true },
+        { name: 'Label', value: label || 'None', inline: true }
+      ],
+      timestamp: new Date()
+    };
+
+    if (channelInfo.link) {
+      embed.url = channelInfo.link;
+    }
+
+    if (latestVideo) {
+      embed.fields.push(
+        { name: '\u200b', value: '\u200b' },
+        { name: 'Latest Video', value: latestVideo.title, inline: false }
+      );
+      if (latestVideo.link) {
+        embed.fields.push({ name: 'Video URL', value: latestVideo.link, inline: false });
+      }
+    }
+
+    return interaction.editReply({ embeds: [embed] });
   } else {
-    await interaction.reply({
-      content: `❌ ${result.message}`,
-      ephemeral: true
-    });
+    const embed = {
+      color: manager.config.embedColors.error,
+      title: '❌ Failed to Add Channel',
+      fields: [
+        { name: 'Error', value: result.message, inline: false }
+      ],
+      timestamp: new Date()
+    };
+    return interaction.editReply({ embeds: [embed] });
   }
 }
 
@@ -204,18 +254,68 @@ async function handleAddTikTok(interaction, manager) {
   const username = interaction.options.getString('username');
   const label = interaction.options.getString('label');
 
+  await interaction.deferReply({ ephemeral: true });
+
+  const validation = await manager.validateTikTokChannel(username);
+
+  if (!validation.success) {
+    const embed = {
+      color: manager.config.embedColors.error,
+      title: '❌ TikTok Channel Validation Failed',
+      fields: [
+        { name: 'Username', value: `@${username}`, inline: true },
+        { name: 'Error', value: validation.message, inline: false }
+      ],
+      timestamp: new Date()
+    };
+    return interaction.editReply({ embeds: [embed] });
+  }
+
   const result = await manager.addTikTokChannel(username, label);
-  
+
   if (result.success) {
-    await interaction.reply({
-      content: `✅ ${result.message}\nChannel: ${label || username}\n@${username}`,
-      ephemeral: true
-    });
+    const channelInfo = validation.channelInfo;
+    const latestVideo = channelInfo.latestVideo;
+
+    const embed = {
+      color: manager.config.embedColors.success,
+      title: '✅ TikTok Channel Added Successfully',
+      thumbnail: {
+        url: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png'
+      },
+      fields: [
+        { name: 'Username', value: `@${username}`, inline: true },
+        { name: 'Display Name', value: channelInfo.title, inline: true },
+        { name: 'Label', value: label || 'None', inline: true }
+      ],
+      timestamp: new Date()
+    };
+
+    if (channelInfo.link) {
+      embed.url = channelInfo.link;
+    }
+
+    if (latestVideo) {
+      embed.fields.push(
+        { name: '\u200b', value: '\u200b' },
+        { name: 'Latest Video', value: latestVideo.title, inline: false }
+      );
+      if (latestVideo.link) {
+        embed.fields.push({ name: 'Video URL', value: latestVideo.link, inline: false });
+      }
+    }
+
+    return interaction.editReply({ embeds: [embed] });
   } else {
-    await interaction.reply({
-      content: `❌ ${result.message}`,
-      ephemeral: true
-    });
+    const embed = {
+      color: manager.config.embedColors.error,
+      title: '❌ Failed to Add Channel',
+      fields: [
+        { name: 'Error', value: result.message, inline: false }
+      ],
+      timestamp: new Date()
+    };
+    return interaction.editReply({ embeds: [embed] });
   }
 }
 

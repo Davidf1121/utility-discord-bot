@@ -19,7 +19,8 @@
   "features": {
     "tempVoiceChannels": true,
     "autoCleanup": true,
-    "videoNotifier": true
+    "videoNotifier": true,
+    "minecraftServer": true
   },
   "videoNotifier": {
     "enabled": true,
@@ -53,6 +54,16 @@
       "pull_request": 5783218,
       "issues": 15548997,
       "default": 10197915
+    }
+  },
+  "mcsrv": {
+    "enabled": true,
+    "savedServers": [],
+    "timeout": 5000,
+    "embedColors": {
+      "online": 5793287,
+      "offline": 15548997,
+      "warning": 16775964
     }
   }
 }

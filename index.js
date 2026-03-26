@@ -6,6 +6,7 @@ import { createLogger } from './utils/Logger.js';
 import { TempChannelManager } from './utils/TempChannelManager.js';
 import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
 import { GitHubNotifierManager } from './utils/GitHubNotifierManager.js';
+import { MinecraftPing } from './utils/MinecraftPing.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -28,10 +29,12 @@ client.commands = new Collection();
 const tempChannelManager = new TempChannelManager(client, config);
 const videoNotifierManager = new VideoNotifierManager(client, config);
 const githubNotifierManager = new GitHubNotifierManager(client, config);
+const minecraftPing = new MinecraftPing(config);
 
 client.tempChannelManager = tempChannelManager;
 client.videoNotifierManager = videoNotifierManager;
 client.githubNotifierManager = githubNotifierManager;
+client.minecraftPing = minecraftPing;
 
 async function loadEvents() {
   const eventsPath = path.join(__dirname, 'events');

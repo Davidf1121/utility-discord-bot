@@ -162,13 +162,18 @@ The video notifier monitors YouTube and TikTok channels and sends Discord notifi
 ### Setting Up YouTube Notifications
 
 1. **Get the YouTube Channel ID**:
-   - Go to the channel's page
-   - Look at the URL: `https://www.youtube.com/channel/CHANNEL_ID` or `https://www.youtube.com/@username`
-   - The channel ID is the string after `/channel/` or you can use the username
+   - **Method A: From the URL**
+     - Go to the channel's page
+     - Look at the URL: `https://www.youtube.com/channel/UCxxxxxxxxxxxxxxxxxxxxxx`
+     - The channel ID is the string starting with `UC`.
+   - **Method B: From Advanced Settings**
+     - Go to [YouTube Advanced Settings](https://www.youtube.com/account_advanced)
+     - Copy your **Channel ID**.
+   - **⚠️ Important**: This is **NOT** your username or handle (e.g., `@username`). It must be the 24-character ID starting with `UC`.
 
 2. **Add the channel**:
    ```
-   /videonotifier add-youtube channel-id:UCxxxxxxxxxxxxx label:"Favorite Channel"
+   /videonotifier add-youtube channel-id:UCxxxxxxxxxxxxxxxxxxxxxx label:"Favorite Channel"
    ```
 
 3. **Set the notification channel**:

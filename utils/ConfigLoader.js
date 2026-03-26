@@ -1,13 +1,12 @@
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+export const configPath = join(__dirname, '..', 'config.json');
 
 export function loadConfig() {
-  const configPath = join(__dirname, '..', 'config.json');
-  
   if (!existsSync(configPath)) {
     throw new Error('config.json not found!');
   }
@@ -22,4 +21,15 @@ export function loadConfig() {
 
 export function getConfig() {
   return loadConfig();
+}
+
+export function saveConfig(config) {
+  try {
+    const configData = JSON.stringify(config, null, 2);
+    writeFileSync(configPath, configData, 'utf-8');
+    return true;
+  } catch (error) {
+    console.error(`Failed to save config.json: ${error.message}`);
+    return false;
+  }
 }

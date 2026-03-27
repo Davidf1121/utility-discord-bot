@@ -70,6 +70,7 @@ export class VideoNotifierManager {
         this.logger.debug(`Checking YouTube channel: ${label || channelId}`);
         
         const feed = await this.parser.parseURL(rssUrl);
+        const channelName = label || feed.title || channelId;
         
         if (feed.items && feed.items.length > 0) {
           const latestVideo = feed.items[0];
@@ -79,11 +80,11 @@ export class VideoNotifierManager {
             const lastKnownId = this.lastVideos.get(`youtube:${channelId}`);
             
             if (lastKnownId !== videoId) {
-              this.logger.info(`New video detected from ${label || channelId}: ${latestVideo.title}`);
-              await this.sendVideoNotification(latestVideo, 'youtube', label || channelId);
+              this.logger.info(`New video detected from ${channelName}: ${latestVideo.title}`);
+              await this.sendVideoNotification(latestVideo, 'youtube', channelName);
               this.lastVideos.set(`youtube:${channelId}`, videoId);
             } else {
-              this.logger.debug(`No new videos from ${label || channelId}`);
+              this.logger.debug(`No new videos from ${channelName}`);
             }
           }
         }
@@ -103,6 +104,7 @@ export class VideoNotifierManager {
         
         const rssUrl = `https://www.tiktok.com/@${username}/rss`;
         const feed = await this.parser.parseURL(rssUrl);
+        const channelName = label || feed.title || username;
         
         if (feed.items && feed.items.length > 0) {
           const latestVideo = feed.items[0];
@@ -112,11 +114,11 @@ export class VideoNotifierManager {
             const lastKnownId = this.lastVideos.get(`tiktok:${username}`);
             
             if (lastKnownId !== videoId) {
-              this.logger.info(`New TikTok detected from ${label || username}: ${latestVideo.title}`);
-              await this.sendVideoNotification(latestVideo, 'tiktok', label || username);
+              this.logger.info(`New TikTok detected from ${channelName}: ${latestVideo.title}`);
+              await this.sendVideoNotification(latestVideo, 'tiktok', channelName);
               this.lastVideos.set(`tiktok:${username}`, videoId);
             } else {
-              this.logger.debug(`No new TikToks from ${label || username}`);
+              this.logger.debug(`No new TikToks from ${channelName}`);
             }
           }
         }
@@ -211,18 +213,18 @@ export class VideoNotifierManager {
 
   getYouTubeThumbnail(video) {
     if (video.mediaThumbnail && video.mediaThumbnail.$.url) {
-      return video.mediaThumbnail.$.url.replace('mqdefault', 'hqdefault');
+      return video.mediaThumbnail.$.url.replace('mqdefault', 'maxresdefault');
     }
     if (video.mediaGroup && video.mediaGroup['media:thumbnail'] && video.mediaGroup['media:thumbnail'][0]) {
-      return video.mediaGroup['media:thumbnail'][0].$.url.replace('mqdefault', 'hqdefault');
+      return video.mediaGroup['media:thumbnail'][0].$.url.replace('mqdefault', 'maxresdefault');
     }
     if (video.videoId) {
-      return `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+      return `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`;
     }
     if (video.link) {
       const videoId = this.extractYouTubeVideoId(video.link);
       if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
       }
     }
     return null;

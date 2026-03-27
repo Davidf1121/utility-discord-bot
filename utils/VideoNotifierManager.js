@@ -10,7 +10,7 @@ export class VideoNotifierManager {
     this.configPath = configPath;
     this.logger = createLogger('VideoNotifier');
     this.parser = new Parser({
-      timeout: 10000,
+      timeout: 15000,
       customFields: {
         item: [
           ['media:group', 'mediaGroup'],
@@ -121,7 +121,14 @@ export class VideoNotifierManager {
           }
         }
       } catch (error) {
-        this.logger.error(`Error checking TikTok channel ${channelConfig.username}:`, error.message);
+        // TikTok RSS often has XML parsing issues - log at debug level to avoid spam
+        if (error.message?.includes('Attribute without value') || 
+            error.message?.includes('Invalid XML') ||
+            error.message?.includes('Unexpected end')) {
+          this.logger.debug(`TikTok RSS parsing failed for ${channelConfig.username}: ${error.message}`);
+        } else {
+          this.logger.error(`Error checking TikTok channel ${channelConfig.username}:`, error.message);
+        }
       }
     }
   }
@@ -273,18 +280,22 @@ export class VideoNotifierManager {
     if (!this.validateYouTubeChannelId(channelId)) {
       return {
         success: false,
-        message: 'Invalid YouTube Channel ID format. Channel IDs should start with "UC" and be 24 characters long.'
+        message: 'Invalid YouTube Channel ID format. Channel IDs should start with "UC" and be 24 characters long (UC + 22 characters).',
+        details: 'YouTube channel IDs look like: UC_x5XG1OV2P6uZZ5FSM9Ttw. This is NOT your username or handle (@username). You can find your Channel ID in YouTube Studio > Settings > Channel > Advanced Settings.'
       };
     }
 
     try {
       const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+      this.logger.debug(`Validating YouTube channel via RSS: ${rssUrl}`);
+      
       const feed = await this.parser.parseURL(rssUrl);
 
       if (!feed.title && !feed.items?.length) {
         return {
           success: false,
-          message: 'Unable to fetch channel information. The channel may be private, deleted, or the ID is incorrect.'
+          message: 'Channel exists but has no public videos or information available.',
+          details: 'The channel may be private, have no uploaded videos, or be restricted in some regions.'
         };
       }
 
@@ -292,7 +303,7 @@ export class VideoNotifierManager {
       const channelInfo = {
         title: feed.title || 'Unknown Channel',
         author: feed.author || 'Unknown',
-        link: feed.link || '',
+        link: feed.link || `https://www.youtube.com/channel/${channelId}`,
         latestVideo: latestVideo ? {
           title: latestVideo.title || 'No title',
           link: latestVideo.link || '',
@@ -306,22 +317,53 @@ export class VideoNotifierManager {
         channelInfo
       };
     } catch (error) {
-      this.logger.error(`Error validating YouTube channel ${channelId}:`, error);
-      if (error.message?.includes('timeout') || error.code === 'ETIMEDOUT') {
+      this.logger.error(`Error validating YouTube channel ${channelId}:`, error.message);
+      
+      // Provide specific, helpful error messages
+      if (error.message?.includes('timeout') || error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
         return {
           success: false,
-          message: 'Request timed out while fetching channel information. Please try again.'
+          message: 'Request timed out while fetching channel information.',
+          details: 'YouTube RSS feed took too long to respond. This may be due to network issues or YouTube rate limiting. Please try again in a few moments.'
         };
       }
-      if (error.message?.includes('404') || error.status === 404) {
+      
+      if (error.message?.includes('ENOTFOUND') || error.message?.includes('getaddrinfo')) {
         return {
           success: false,
-          message: 'Channel not found. Please verify the Channel ID is correct.'
+          message: 'Network error: Unable to reach YouTube.',
+          details: 'Could not resolve the YouTube RSS feed URL. Please check your internet connection and try again.'
         };
       }
+      
+      if (error.message?.includes('404') || error.status === 404 || error.message?.includes('Status code 404')) {
+        return {
+          success: false,
+          message: 'Channel not found.',
+          details: `The channel ID "${channelId}" does not exist or is not accessible. Please verify the Channel ID is correct. You can find your Channel ID in YouTube Studio > Settings > Channel > Advanced Settings.`
+        };
+      }
+      
+      if (error.message?.includes('403') || error.status === 403) {
+        return {
+          success: false,
+          message: 'Access denied to channel RSS feed.',
+          details: 'YouTube may be blocking RSS feed access for this channel. This could be due to privacy settings or regional restrictions.'
+        };
+      }
+
+      if (error.message?.includes('Invalid XML') || error.message?.includes('Unexpected end')) {
+        return {
+          success: false,
+          message: 'Received invalid response from YouTube.',
+          details: 'The RSS feed returned malformed data. This might be a temporary issue with YouTube\'s servers. Please try again later.'
+        };
+      }
+      
       return {
         success: false,
-        message: `Error validating channel: ${error.message}`
+        message: 'Failed to validate channel.',
+        details: `Error: ${error.message}. Please check the channel ID and try again.`
       };
     }
   }
@@ -330,54 +372,92 @@ export class VideoNotifierManager {
     if (!username || !/^[a-zA-Z0-9_.-]+$/.test(username)) {
       return {
         success: false,
-        message: 'Invalid TikTok username format. Username should only contain letters, numbers, dots, underscores, and hyphens.'
+        message: 'Invalid TikTok username format.',
+        details: 'Username should only contain letters, numbers, dots, underscores, and hyphens. Do not include the @ symbol.'
       };
     }
 
     try {
-      const rssUrl = `https://www.tiktok.com/@${username}/rss`;
-      const feed = await this.parser.parseURL(rssUrl);
+      // Use HTTP fetch to check if the profile page exists
+      // TikTok's /rss endpoint has XML parsing issues, so we check the profile page directly
+      const profileUrl = `https://www.tiktok.com/@${username}`;
+      this.logger.debug(`Validating TikTok channel via profile page: ${profileUrl}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(profileUrl, {
+        method: 'HEAD',
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9'
+        }
+      });
+      
+      clearTimeout(timeoutId);
 
-      if (!feed.title && !feed.items?.length) {
+      if (response.status === 404) {
         return {
           success: false,
-          message: 'Unable to fetch account information. The account may be private, deleted, or the username is incorrect.'
+          message: 'TikTok account not found.',
+          details: `The username "@${username}" does not exist on TikTok. Please verify the username is spelled correctly.`
         };
       }
 
-      const latestVideo = feed.items[0];
+      if (response.status === 403) {
+        return {
+          success: false,
+          message: 'Access denied to TikTok profile.',
+          details: 'The account may be private, blocked, or restricted. TikTok may also be blocking automated access.'
+        };
+      }
+
+      if (!response.ok && response.status !== 200) {
+        return {
+          success: false,
+          message: `Received HTTP ${response.status} from TikTok.`,
+          details: 'TikTok returned an unexpected response. This could be temporary. Please try again later.'
+        };
+      }
+
+      // Profile page exists (200 OK or similar)
       const channelInfo = {
-        title: feed.title || username,
-        link: feed.link || `https://www.tiktok.com/@${username}`,
-        latestVideo: latestVideo ? {
-          title: latestVideo.title || 'No title',
-          link: latestVideo.link || '',
-          pubDate: latestVideo.pubDate || ''
-        } : null
+        title: username,
+        link: profileUrl,
+        latestVideo: null
       };
 
       return {
         success: true,
-        message: 'Channel validated successfully',
-        channelInfo
+        message: 'Account validated successfully',
+        channelInfo,
+        note: 'Note: TikTok RSS feeds may have intermittent availability. If video notifications don\'t work immediately, the bot will retry automatically.'
       };
     } catch (error) {
-      this.logger.error(`Error validating TikTok channel ${username}:`, error);
-      if (error.message?.includes('timeout') || error.code === 'ETIMEDOUT') {
+      this.logger.error(`Error validating TikTok channel ${username}:`, error.message);
+      
+      if (error.name === 'AbortError' || error.message?.includes('timeout') || error.code === 'ETIMEDOUT') {
         return {
           success: false,
-          message: 'Request timed out while fetching account information. Please try again.'
+          message: 'Request timed out while fetching TikTok profile.',
+          details: 'TikTok took too long to respond. This may be due to network issues, rate limiting, or TikTok blocking automated requests. Please try again in a few moments.'
         };
       }
-      if (error.message?.includes('404') || error.status === 404) {
+      
+      if (error.message?.includes('ENOTFOUND') || error.message?.includes('getaddrinfo')) {
         return {
           success: false,
-          message: 'Account not found. Please verify the username is correct.'
+          message: 'Network error: Unable to reach TikTok.',
+          details: 'Could not resolve the TikTok URL. Please check your internet connection and try again.'
         };
       }
+      
       return {
         success: false,
-        message: `Error validating account: ${error.message}`
+        message: 'Failed to validate TikTok account.',
+        details: `Error: ${error.message}. Please verify the username is correct and try again.`
       };
     }
   }

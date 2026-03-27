@@ -169,21 +169,51 @@ async function handleAddYouTube(interaction, manager) {
 
   await interaction.deferReply({ ephemeral: true });
 
+  // Step 1: Validate the channel first
   const validation = await manager.validateYouTubeChannel(channelId);
 
   if (!validation.success) {
     const embed = {
       color: manager.config.embedColors.error,
       title: '❌ YouTube Channel Validation Failed',
+      thumbnail: {
+        url: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+      },
       fields: [
-        { name: 'Channel ID', value: channelId, inline: true },
-        { name: 'Error', value: validation.message, inline: false }
+        { name: 'Channel ID', value: `\`${channelId}\``, inline: false }
       ],
       timestamp: new Date()
     };
+
+    // Add error message
+    embed.fields.push({ 
+      name: '❌ Error', 
+      value: validation.message, 
+      inline: false 
+    });
+
+    // Add detailed explanation if available
+    if (validation.details) {
+      embed.fields.push({ 
+        name: 'ℹ️ Details', 
+        value: validation.details, 
+        inline: false 
+      });
+    }
+
+    // Add helpful tip for invalid format
+    if (validation.message.includes('Invalid YouTube Channel ID format')) {
+      embed.fields.push({
+        name: '💡 How to find your Channel ID',
+        value: '1. Go to YouTube Studio\n2. Click Settings (gear icon)\n3. Select "Channel" then "Advanced Settings"\n4. Copy the "Channel ID" (starts with UC)',
+        inline: false
+      });
+    }
+
     return interaction.editReply({ embeds: [embed] });
   }
 
+  // Step 2: Add the channel after successful validation
   const result = await manager.addYouTubeChannel(channelId, label);
 
   if (result.success) {
@@ -193,28 +223,34 @@ async function handleAddYouTube(interaction, manager) {
     const embed = {
       color: manager.config.embedColors.success,
       title: '✅ YouTube Channel Added Successfully',
+      url: channelInfo.link || `https://www.youtube.com/channel/${channelId}`,
       thumbnail: {
         url: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
       },
       fields: [
-        { name: 'Channel Name', value: channelInfo.title, inline: true },
-        { name: 'Channel ID', value: channelId, inline: true },
-        { name: 'Label', value: label || 'None', inline: true }
+        { name: '📺 Channel Name', value: channelInfo.title, inline: true },
+        { name: '🆔 Channel ID', value: `\`${channelId}\``, inline: true },
+        { name: '🏷️ Label', value: label || 'None', inline: true }
       ],
-      timestamp: new Date()
+      timestamp: new Date(),
+      footer: {
+        text: 'YouTube',
+        iconURL: 'https://www.youtube.com/favicon.ico'
+      }
     };
-
-    if (channelInfo.link) {
-      embed.url = channelInfo.link;
-    }
 
     if (latestVideo) {
       embed.fields.push(
-        { name: '\u200b', value: '\u200b' },
-        { name: 'Latest Video', value: latestVideo.title, inline: false }
+        { name: '\u200b', value: '\u200b', inline: false },
+        { name: '🎬 Latest Video', value: `[${latestVideo.title}](${latestVideo.link})`, inline: false }
       );
-      if (latestVideo.link) {
-        embed.fields.push({ name: 'Video URL', value: latestVideo.link, inline: false });
+      if (latestVideo.pubDate) {
+        const pubDate = new Date(latestVideo.pubDate);
+        embed.fields.push({ 
+          name: '📅 Published', 
+          value: `<t:${Math.floor(pubDate.getTime() / 1000)}:R>`, 
+          inline: true 
+        });
       }
     }
 
@@ -223,8 +259,12 @@ async function handleAddYouTube(interaction, manager) {
     const embed = {
       color: manager.config.embedColors.error,
       title: '❌ Failed to Add Channel',
+      thumbnail: {
+        url: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+      },
       fields: [
-        { name: 'Error', value: result.message, inline: false }
+        { name: 'Channel ID', value: `\`${channelId}\``, inline: false },
+        { name: '❌ Error', value: result.message, inline: false }
       ],
       timestamp: new Date()
     };
@@ -256,62 +296,95 @@ async function handleAddTikTok(interaction, manager) {
 
   await interaction.deferReply({ ephemeral: true });
 
+  // Step 1: Validate the channel first
   const validation = await manager.validateTikTokChannel(username);
 
   if (!validation.success) {
     const embed = {
       color: manager.config.embedColors.error,
-      title: '❌ TikTok Channel Validation Failed',
-      fields: [
-        { name: 'Username', value: `@${username}`, inline: true },
-        { name: 'Error', value: validation.message, inline: false }
-      ],
-      timestamp: new Date()
-    };
-    return interaction.editReply({ embeds: [embed] });
-  }
-
-  const result = await manager.addTikTokChannel(username, label);
-
-  if (result.success) {
-    const channelInfo = validation.channelInfo;
-    const latestVideo = channelInfo.latestVideo;
-
-    const embed = {
-      color: manager.config.embedColors.success,
-      title: '✅ TikTok Channel Added Successfully',
+      title: '❌ TikTok Account Validation Failed',
       thumbnail: {
         url: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png'
       },
       fields: [
-        { name: 'Username', value: `@${username}`, inline: true },
-        { name: 'Display Name', value: channelInfo.title, inline: true },
-        { name: 'Label', value: label || 'None', inline: true }
+        { name: 'Username', value: `@${username}`, inline: false }
       ],
       timestamp: new Date()
     };
 
-    if (channelInfo.link) {
-      embed.url = channelInfo.link;
+    // Add error message
+    embed.fields.push({ 
+      name: '❌ Error', 
+      value: validation.message, 
+      inline: false 
+    });
+
+    // Add detailed explanation if available
+    if (validation.details) {
+      embed.fields.push({ 
+        name: 'ℹ️ Details', 
+        value: validation.details, 
+        inline: false 
+      });
     }
 
-    if (latestVideo) {
-      embed.fields.push(
-        { name: '\u200b', value: '\u200b' },
-        { name: 'Latest Video', value: latestVideo.title, inline: false }
-      );
-      if (latestVideo.link) {
-        embed.fields.push({ name: 'Video URL', value: latestVideo.link, inline: false });
+    // Add helpful tip for invalid format
+    if (validation.message.includes('Invalid TikTok username format')) {
+      embed.fields.push({
+        name: '💡 Correct format',
+        value: 'Enter just the username without the @ symbol.\nExamples: `charlidamelio`, `tiktok`, `username123`',
+        inline: false
+      });
+    }
+
+    return interaction.editReply({ embeds: [embed] });
+  }
+
+  // Step 2: Add the channel after successful validation
+  const result = await manager.addTikTokChannel(username, label);
+
+  if (result.success) {
+    const channelInfo = validation.channelInfo;
+    const profileUrl = `https://www.tiktok.com/@${username}`;
+
+    const embed = {
+      color: manager.config.embedColors.success,
+      title: '✅ TikTok Account Added Successfully',
+      url: profileUrl,
+      thumbnail: {
+        url: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png'
+      },
+      fields: [
+        { name: '👤 Username', value: `@${username}`, inline: true },
+        { name: '🏷️ Label', value: label || 'None', inline: true }
+      ],
+      timestamp: new Date(),
+      footer: {
+        text: 'TikTok',
+        iconURL: 'https://www.tiktok.com/favicon.ico'
       }
+    };
+
+    // Add note about RSS if present
+    if (validation.note) {
+      embed.fields.push({
+        name: '⚠️ Note',
+        value: validation.note,
+        inline: false
+      });
     }
 
     return interaction.editReply({ embeds: [embed] });
   } else {
     const embed = {
       color: manager.config.embedColors.error,
-      title: '❌ Failed to Add Channel',
+      title: '❌ Failed to Add Account',
+      thumbnail: {
+        url: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png'
+      },
       fields: [
-        { name: 'Error', value: result.message, inline: false }
+        { name: 'Username', value: `@${username}`, inline: false },
+        { name: '❌ Error', value: result.message, inline: false }
       ],
       timestamp: new Date()
     };

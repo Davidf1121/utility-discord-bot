@@ -149,14 +149,25 @@ export class VideoNotifierManager {
       return;
     }
 
-    const embed = this.createEmbed(video, platform, channelLabel);
+    const style = this.config.videoNotifier.notificationStyle || 'embed';
     
     try {
-      await channel.send({ embeds: [embed] });
-      this.logger.info(`Sent notification for ${platform} video: ${video.title}`);
+      if (style === 'simple') {
+        const message = this.createSimpleMessage(video, platform, channelLabel);
+        await channel.send({ content: message });
+      } else {
+        const embed = this.createEmbed(video, platform, channelLabel);
+        await channel.send({ embeds: [embed] });
+      }
+      this.logger.info(`Sent ${style} notification for ${platform} video: ${video.title}`);
     } catch (error) {
       this.logger.error('Error sending notification:', error);
     }
+  }
+
+  createSimpleMessage(video, platform, channelLabel) {
+    const icon = platform === 'youtube' ? '📺' : '🎬';
+    return `${icon} **New Video from ${channelLabel}!**\n\n${video.title}\n${video.link}`;
   }
 
   createEmbed(video, platform, channelLabel) {
@@ -589,8 +600,14 @@ export class VideoNotifierManager {
       throw new Error(`Notification channel not found: ${targetChannelId}`);
     }
 
-    const embed = this.createEmbed(testVideo, 'youtube', 'Test Channel');
-    await channel.send({ content: '🔔 **Test YouTube Notification**', embeds: [embed] });
+    const style = this.config.videoNotifier.notificationStyle || 'embed';
+    if (style === 'simple') {
+      const message = this.createSimpleMessage(testVideo, 'youtube', 'Test Channel');
+      await channel.send({ content: `🔔 **Test YouTube Notification**\n\n${message}` });
+    } else {
+      const embed = this.createEmbed(testVideo, 'youtube', 'Test Channel');
+      await channel.send({ content: '🔔 **Test YouTube Notification**', embeds: [embed] });
+    }
   }
 
   async sendTestTikTokNotification(channelId, videoData = null) {
@@ -613,7 +630,13 @@ export class VideoNotifierManager {
       throw new Error(`Notification channel not found: ${targetChannelId}`);
     }
 
-    const embed = this.createEmbed(testVideo, 'tiktok', 'Test User');
-    await channel.send({ content: '🔔 **Test TikTok Notification**', embeds: [embed] });
+    const style = this.config.videoNotifier.notificationStyle || 'embed';
+    if (style === 'simple') {
+      const message = this.createSimpleMessage(testVideo, 'tiktok', 'Test User');
+      await channel.send({ content: `🔔 **Test TikTok Notification**\n\n${message}` });
+    } else {
+      const embed = this.createEmbed(testVideo, 'tiktok', 'Test User');
+      await channel.send({ content: '🔔 **Test TikTok Notification**', embeds: [embed] });
+    }
   }
 }

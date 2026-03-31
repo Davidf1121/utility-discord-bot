@@ -38,6 +38,7 @@
       "enabled": true,
       "channels": []
     },
+    "notificationStyle": "embed",
     "embedSettings": {
       "includeDescription": true,
       "descriptionLength": 200

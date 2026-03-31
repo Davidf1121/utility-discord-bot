@@ -73,6 +73,19 @@ export default {
       subcommand
         .setName('test-tiktok')
         .setDescription('Send a test TikTok notification'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('set-style')
+        .setDescription('Set the notification style (embed vs simple)')
+        .addStringOption(option =>
+          option
+            .setName('style')
+            .setDescription('The notification style')
+            .setRequired(true)
+            .addChoices(
+              { name: 'Rich Embed (Default)', value: 'embed' },
+              { name: 'Simple Text', value: 'simple' }
+            )))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   
   async execute(interaction) {
@@ -99,6 +112,8 @@ export default {
         return handleRemoveTikTok(interaction, manager);
       case 'set-channel':
         return handleSetChannel(interaction, manager);
+      case 'set-style':
+        return handleSetStyle(interaction, manager);
       case 'toggle':
         return handleToggle(interaction, manager);
       case 'test-youtube':
@@ -146,6 +161,7 @@ async function handleList(interaction, manager) {
   const notificationChannel = config?.notificationChannelId 
     ? `<#${config.notificationChannelId}>` 
     : 'Not set';
+  const style = config?.notificationStyle === 'simple' ? 'Simple Text' : 'Rich Embed (Default)';
 
   const embed = {
     color: manager.config.embedColors.primary,
@@ -153,6 +169,7 @@ async function handleList(interaction, manager) {
     fields: [
       { name: 'Status', value: status, inline: true },
       { name: 'Check Interval', value: checkInterval, inline: true },
+      { name: 'Style', value: style, inline: true },
       { name: 'Notification Channel', value: notificationChannel, inline: false },
       { name: 'YouTube Channels', value: youtubeList, inline: false },
       { name: 'TikTok Channels', value: tiktokList, inline: false }
@@ -443,6 +460,25 @@ async function handleToggle(interaction, manager) {
     
     await interaction.reply({
       content: `✅ Video notifier ${newStatus ? 'enabled' : 'disabled'}`,
+      ephemeral: true
+    });
+  } else {
+    await interaction.reply({
+      content: `❌ ${result.message}`,
+      ephemeral: true
+    });
+  }
+}
+
+async function handleSetStyle(interaction, manager) {
+  const style = interaction.options.getString('style');
+  
+  const result = await manager.updateConfig({ notificationStyle: style });
+  
+  if (result.success) {
+    const styleName = style === 'simple' ? 'Simple Text' : 'Rich Embed';
+    await interaction.reply({
+      content: `✅ Notification style set to **${styleName}**`,
       ephemeral: true
     });
   } else {

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
 import { readFileSync } from 'fs';
-import { loadConfig, configPath } from './utils/ConfigLoader.js';
+import { loadConfig, reloadConfig, configPath } from './utils/ConfigLoader.js';
 import { createLogger } from './utils/Logger.js';
 import { TempChannelManager } from './utils/TempChannelManager.js';
 import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
@@ -13,7 +13,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const config = loadConfig();
+let config = loadConfig();
+let reloadTimer = null;
 const logger = createLogger('Bot');
 
 const client = new Client({
@@ -35,6 +36,48 @@ client.tempChannelManager = tempChannelManager;
 client.videoNotifierManager = videoNotifierManager;
 client.githubNotifierManager = githubNotifierManager;
 client.minecraftPing = minecraftPing;
+
+function updateConfigManagers(newConfig) {
+  config = newConfig;
+  tempChannelManager.config = config;
+  videoNotifierManager.config = config;
+  githubNotifierManager.config = config;
+  minecraftPing.config = config;
+  logger.info('Updated config references for all managers');
+}
+
+function startAutoReload() {
+  if (!config.autoReload?.enabled) {
+    logger.info('Auto-reload is disabled in config');
+    return;
+  }
+
+  const intervalMs = (config.autoReload.intervalSeconds || 60) * 1000;
+  logger.info(`Starting auto-reload with interval: ${intervalMs}ms`);
+
+  reloadTimer = setInterval(() => {
+    logger.debug('Attempting to reload config...');
+    const newConfig = reloadConfig();
+    if (newConfig) {
+      updateConfigManagers(newConfig);
+      logger.info('Config auto-reloaded successfully');
+    } else {
+      logger.error('Failed to auto-reload config');
+    }
+  }, intervalMs);
+}
+
+function stopAutoReload() {
+  if (reloadTimer) {
+    clearInterval(reloadTimer);
+    reloadTimer = null;
+    logger.info('Auto-reload stopped');
+  }
+}
+
+client.updateConfig = updateConfigManagers;
+client.startAutoReload = startAutoReload;
+client.stopAutoReload = stopAutoReload;
 
 async function loadEvents() {
   const eventsPath = path.join(__dirname, 'events');
@@ -129,11 +172,13 @@ async function main() {
     logger.error('DISCORD_TOKEN environment variable is not set!');
     process.exit(1);
   }
-  
+
   await loadEvents();
   await loadComponents();
   await deployCommands();
-  
+
+  startAutoReload();
+
   client.login(process.env.DISCORD_TOKEN);
 }
 

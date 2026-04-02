@@ -33,3 +33,15 @@ export function saveConfig(config) {
     return false;
   }
 }
+
+export function reloadConfig() {
+  try {
+    const configData = readFileSync(configPath, 'utf-8');
+    const newConfig = JSON.parse(configData);
+    console.log('Config reloaded successfully');
+    return newConfig;
+  } catch (error) {
+    console.error(`Failed to reload config.json: ${error.message}`);
+    return null;
+  }
+}

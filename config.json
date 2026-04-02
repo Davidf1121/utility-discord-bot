@@ -66,5 +66,9 @@
       "offline": 15548997,
       "warning": 16775964
     }
+  },
+  "autoReload": {
+    "enabled": true,
+    "intervalSeconds": 60
   }
 }

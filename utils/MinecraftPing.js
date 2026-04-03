@@ -228,85 +228,129 @@ export class MinecraftPing {
     const colors = config.embedColors || {};
     const colorsMcsrv = config.mcsrv?.embedColors || {};
 
-    if (!result.success) {
+    // Handle null/undefined result
+    if (!result) {
       return {
-        color: colorsMcsrv.offline || colors.error || 15548997,
-        title: `❌ ${result.host}${result.port ? `:${result.port}` : ''}`,
-        description: 'Server is offline or unreachable',
-        fields: [
-          { name: 'Error', value: result.error || 'Unknown error', inline: false },
-          { name: 'Address', value: `${result.host}:${result.port}`, inline: true },
-          { name: 'Type', value: result.type === 'java' ? '☕ Java' : '📱 Bedrock', inline: true }
-        ],
-        timestamp: new Date()
+        embed: {
+          color: colorsMcsrv.offline || colors.error || 15548997,
+          title: '❌ Server Error',
+          description: 'Could not retrieve server information',
+          fields: [],
+          timestamp: new Date()
+        },
+        iconBuffer: null
       };
     }
 
-    const iconBuffer = this.getServerIcon(result);
+    // Ensure all result fields have defaults
+    const safeResult = {
+      success: result.success || false,
+      host: result.host || 'Unknown',
+      port: result.port || null,
+      type: result.type || 'java',
+      error: result.error || 'Unknown error',
+      motd: {
+        clean: result.motd?.clean || 'No MOTD'
+      },
+      players: {
+        online: result.players?.online ?? 0,
+        max: result.players?.max ?? 0,
+        sample: result.players?.sample || []
+      },
+      version: {
+        name: result.version?.name || 'Unknown'
+      },
+      latency: result.latency ?? 0,
+      serverType: result.serverType || 'Unknown',
+      favicon: result.favicon || null,
+      gameId: result.gameId || null,
+      serverId: result.serverId || null
+    };
+
+    if (!safeResult.success) {
+      return {
+        embed: {
+          color: colorsMcsrv.offline || colors.error || 15548997,
+          title: `❌ ${safeResult.host}${safeResult.port ? `:${safeResult.port}` : ''}`,
+          description: 'Server is offline or unreachable',
+          fields: [
+            { name: 'Error', value: String(safeResult.error), inline: false },
+            { name: 'Address', value: `${safeResult.host}:${safeResult.port || 'N/A'}`, inline: true },
+            { name: 'Type', value: safeResult.type === 'java' ? '☕ Java' : '📱 Bedrock', inline: true }
+          ],
+          timestamp: new Date()
+        },
+        iconBuffer: null
+      };
+    }
+
+    const iconBuffer = this.getServerIcon(safeResult);
     const iconUrl = iconBuffer ? `attachment://icon.png` : null;
 
     const embed = {
       color: colorsMcsrv.online || colors.success || 5793287,
-      title: `✅ ${this.formatServerAddress(result.host, result.port, result.type)}`,
-      description: result.motd.clean || 'Server Online',
+      title: `✅ ${this.formatServerAddress(safeResult.host, safeResult.port, safeResult.type)}`,
+      description: String(safeResult.motd.clean || 'Server Online'),
       thumbnail: iconUrl ? { url: iconUrl } : null,
       fields: [
         {
           name: '👥 Players',
-          value: `${result.players.online}/${result.players.max}`,
+          value: `${safeResult.players.online}/${safeResult.players.max}`,
           inline: true
         },
         {
           name: '📡 Latency',
-          value: `${result.latency}ms`,
+          value: `${safeResult.latency}ms`,
           inline: true
         },
         {
           name: '🎮 Version',
-          value: result.version.name,
+          value: String(safeResult.version.name),
           inline: false
         },
         {
           name: '🏷️ Server Type',
-          value: result.serverType,
+          value: String(safeResult.serverType),
           inline: true
         },
         {
           name: '🔧 Platform',
-          value: result.type === 'java' ? '☕ Java Edition' : '📱 Bedrock Edition',
+          value: safeResult.type === 'java' ? '☕ Java Edition' : '📱 Bedrock Edition',
           inline: true
         }
       ],
       timestamp: new Date()
     };
 
-    if (result.type === 'bedrock') {
-      if (result.gameId && result.gameId !== 'Unknown') {
+    if (safeResult.type === 'bedrock') {
+      if (safeResult.gameId && safeResult.gameId !== 'Unknown') {
         embed.fields.push({
           name: '🎮 Game',
-          value: result.gameId,
+          value: String(safeResult.gameId),
           inline: true
         });
       }
-      if (result.serverId && result.serverId !== 'Unknown') {
+      if (safeResult.serverId && safeResult.serverId !== 'Unknown') {
         embed.fields.push({
           name: '🆔 Server ID',
-          value: result.serverId,
+          value: String(safeResult.serverId),
           inline: true
         });
       }
     }
 
-    if (result.players.sample && result.players.sample.length > 0) {
-      const playerList = result.players.sample
+    if (safeResult.players.sample && safeResult.players.sample.length > 0) {
+      const playerList = safeResult.players.sample
         .slice(0, 5)
-        .map(p => p.name)
+        .map(p => p.name || 'Unknown')
         .join(', ');
-      embed.fields.push({
-        name: '👤 Sample Players',
-        value: playerList + (result.players.sample.length > 5 ? '...' : ''),
-        inline: false
-      });
+      if (playerList) {
+        embed.fields.push({
+          name: '👤 Sample Players',
+          value: playerList + (safeResult.players.sample.length > 5 ? '...' : ''),
+          inline: false
+        });
+      }
     }
 
     return { embed, iconBuffer };

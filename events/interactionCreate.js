@@ -71,5 +71,19 @@ export default {
         }
       }
     }
+    
+    if (interaction.isAutocomplete()) {
+      const command = interaction.client.commands.get(interaction.commandName);
+      if (!command || !command.autocomplete) {
+        logger.warn(`No autocomplete handler found for ${interaction.commandName}`);
+        return;
+      }
+      
+      try {
+        await command.autocomplete(interaction);
+      } catch (error) {
+        logger.error(`Error executing autocomplete for ${interaction.commandName}:`, error);
+      }
+    }
   }
 };

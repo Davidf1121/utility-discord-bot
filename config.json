@@ -20,7 +20,8 @@
     "tempVoiceChannels": true,
     "autoCleanup": true,
     "videoNotifier": true,
-    "minecraftServer": true
+    "minecraftServer": true,
+    "rcon": true
   },
   "videoNotifier": {
     "enabled": true,
@@ -66,6 +67,11 @@
       "offline": 15548997,
       "warning": 16775964
     }
+  },
+  "rcon": {
+    "enabled": true,
+    "savedServers": [],
+    "timeout": 5000
   },
   "autoReload": {
     "enabled": true,

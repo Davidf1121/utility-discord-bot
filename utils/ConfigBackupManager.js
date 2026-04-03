@@ -20,8 +20,16 @@ export class ConfigBackupManager {
       'config.v*.json',
       'config(*).json',
       'config_old.json',
-      'config-backup.json'
+      'config-backup.json',
+      'config(old).json',
+      'config(old2).json',
+      'config.save',
+      'config.bak'
     ];
+  }
+
+  isEmpty(value) {
+    return value === '' || value === null || value === undefined;
   }
 
   getBackupPatterns() {
@@ -36,8 +44,6 @@ export class ConfigBackupManager {
       const files = readdirSync(this.basePath);
       
       for (const file of files) {
-        if (!file.endsWith('.json')) continue;
-        
         for (const pattern of patterns) {
           if (this.matchesPattern(file, pattern)) {
             if (file !== 'config.json') {
@@ -57,6 +63,8 @@ export class ConfigBackupManager {
     if (pattern.includes('*')) {
       const regexPattern = pattern
         .replace(/\./g, '\\.')
+        .replace(/\(/g, '\\(')
+        .replace(/\)/g, '\\)')
         .replace(/\*/g, '.*');
       const regex = new RegExp(`^${regexPattern}$`);
       return regex.test(filename);
@@ -95,22 +103,38 @@ export class ConfigBackupManager {
     
     for (const key of Object.keys(backupConfig)) {
       const currentPath = path ? `${path}.${key}` : key;
+      const backupValue = backupConfig[key];
+      const currentValue = currentConfig[key];
       
-      if (!(key in currentConfig)) {
-        missing.push({
-          path: currentPath,
-          value: backupConfig[key]
-        });
-      } else if (
-        typeof backupConfig[key] === 'object' &&
-        backupConfig[key] !== null &&
-        !Array.isArray(backupConfig[key]) &&
-        typeof currentConfig[key] === 'object' &&
-        currentConfig[key] !== null
+      const isMissing = !(key in currentConfig);
+      const isCurrentEmpty = this.isEmpty(currentValue);
+      const isBackupNotEmpty = !this.isEmpty(backupValue);
+
+      if (isMissing || (isCurrentEmpty && isBackupNotEmpty)) {
+        if (typeof backupValue !== 'object' || backupValue === null || Array.isArray(backupValue)) {
+          missing.push({
+            path: currentPath,
+            value: backupValue
+          });
+        } else if (isMissing || typeof currentValue !== 'object' || currentValue === null) {
+          missing.push({
+            path: currentPath,
+            value: backupValue
+          });
+          continue;
+        }
+      }
+      
+      if (
+        typeof backupValue === 'object' &&
+        backupValue !== null &&
+        !Array.isArray(backupValue) &&
+        typeof currentValue === 'object' &&
+        currentValue !== null
       ) {
         const nestedMissing = this.findMissingKeys(
-          currentConfig[key],
-          backupConfig[key],
+          currentValue,
+          backupValue,
           currentPath
         );
         missing.push(...nestedMissing);
@@ -170,21 +194,25 @@ export class ConfigBackupManager {
 
       for (const { path, value } of missingKeys) {
         const existingValue = this.getNestedValue(upgradedConfig, path);
-        
-        if (existingValue === undefined) {
+        const isMissing = existingValue === undefined;
+        const isCurrentEmpty = this.isEmpty(existingValue);
+        const isBackupNotEmpty = !this.isEmpty(value);
+
+        if (isMissing || (isCurrentEmpty && isBackupNotEmpty)) {
           this.setNestedValue(upgradedConfig, path, value);
           allChanges.push({
             path,
             value: this.formatValue(value),
             source: backupFile
           });
-          this.logger.info(`Migrated: ${path} = ${this.formatValue(value)} (from ${backupFile})`);
+          const action = isMissing ? 'Migrated' : 'Updated empty value';
+          this.logger.info(`${action}: ${path} = ${this.formatValue(value)} (from ${backupFile})`);
         }
       }
     }
 
     if (allChanges.length > 0) {
-      this.logger.info(`Config upgrade complete. Migrated ${allChanges.length} setting(s).`);
+      this.logger.info(`Config upgrade complete. Migrated/Updated ${allChanges.length} setting(s).`);
       return { upgraded: true, changes: allChanges, config: upgradedConfig };
     }
 

@@ -308,3 +308,22 @@ function parseAddress(address) {
 
   return [host, port];
 }
+
+export async function autocomplete(interaction) {
+  const focusedValue = interaction.options.getFocused();
+  const config = interaction.client.tempChannelManager.config;
+  const savedServers = config.mcsrv?.savedServers || [];
+
+  const choices = savedServers
+    .filter(server => 
+      server.name?.toLowerCase().includes(focusedValue.toLowerCase()) ||
+      server.address.toLowerCase().includes(focusedValue.toLowerCase())
+    )
+    .map(server => ({
+      name: server.name || server.address,
+      value: server.address
+    }))
+    .slice(0, 25);
+
+  await interaction.respond(choices);
+}

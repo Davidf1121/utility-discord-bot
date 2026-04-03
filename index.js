@@ -7,6 +7,7 @@ import { TempChannelManager } from './utils/TempChannelManager.js';
 import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
 import { GitHubNotifierManager } from './utils/GitHubNotifierManager.js';
 import { MinecraftPing } from './utils/MinecraftPing.js';
+import { MinecraftRcon } from './utils/MinecraftRcon.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -31,11 +32,13 @@ const tempChannelManager = new TempChannelManager(client, config);
 const videoNotifierManager = new VideoNotifierManager(client, config, configPath);
 const githubNotifierManager = new GitHubNotifierManager(client, config);
 const minecraftPing = new MinecraftPing(config);
+const minecraftRcon = new MinecraftRcon(config);
 
 client.tempChannelManager = tempChannelManager;
 client.videoNotifierManager = videoNotifierManager;
 client.githubNotifierManager = githubNotifierManager;
 client.minecraftPing = minecraftPing;
+client.minecraftRcon = minecraftRcon;
 
 function updateConfigManagers(newConfig) {
   config = newConfig;
@@ -43,6 +46,7 @@ function updateConfigManagers(newConfig) {
   videoNotifierManager.config = config;
   githubNotifierManager.config = config;
   minecraftPing.config = config;
+  minecraftRcon.config = config;
   logger.info('Updated config references for all managers');
 }
 
@@ -178,6 +182,22 @@ async function main() {
   await deployCommands();
 
   startAutoReload();
+
+  client.on('shutdown', async () => {
+    await minecraftRcon.disconnectAll();
+  });
+
+  process.on('SIGINT', async () => {
+    logger.info('Received SIGINT, shutting down...');
+    await minecraftRcon.disconnectAll();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', async () => {
+    logger.info('Received SIGTERM, shutting down...');
+    await minecraftRcon.disconnectAll();
+    process.exit(0);
+  });
 
   client.login(process.env.DISCORD_TOKEN);
 }

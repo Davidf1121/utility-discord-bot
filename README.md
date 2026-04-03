@@ -15,14 +15,17 @@ A modular, configurable Discord bot with utility functionality built with Discor
 - **🎤 Temporary Voice Channels**: Create custom voice channels that auto-delete when empty
 - **📺 Video Notifier**: Monitor YouTube/TikTok channels and get notifications when new content is posted
 - **🐙 GitHub Integration**: Receive Discord notifications for GitHub events (pushes, pull requests, issues)
+- **🎮 Minecraft Server Tools**: Ping Java/Bedrock servers, save favorites, and view status
+- **🖥️ RCON Console**: Execute Minecraft server commands directly from Discord
 - **🧩 Modular Architecture**: Easy to extend with new commands and features
 - **⚙️ Configuration-Based**: All settings externalized in `config.json`
+- **🔄 Auto Config Upgrade**: Automatically merges settings from backup config files
 - **🔄 Multiple Creation Methods**:
   - Slash command `/create` with modal form
   - Setup command `/setup` to place control buttons
   - Join a "Create Voice Channel" voice channel for instant creation
 - **🧹 Auto-Cleanup**: Channels automatically delete when they become empty
-- **🎨 Customizable**: Configure colors, delays, limits, and more
+- **🎨 Customizable**: Configure colors, delays, limits, notification styles, and more
 
 ---
 
@@ -121,6 +124,7 @@ npm run dev
 |---------|-------------|
 | `/ping` | Check bot latency |
 | `/help` | Display available commands and bot information |
+| `/auto-reload` | Enable/disable automatic config reloading |
 
 ### Voice Channel Commands
 
@@ -128,6 +132,25 @@ npm run dev
 |---------|-------------|
 | `/create` | Open the channel creation modal form |
 | `/setup` | Send the control panel with a creation button to the current channel |
+
+### Minecraft Server Commands (Admin Only)
+
+| Command | Description |
+|---------|-------------|
+| `/mcsrv ping` | Ping a Minecraft server (Java or Bedrock) |
+| `/mcsrv list` | List all saved Minecraft servers |
+| `/mcsrv add` | Save a Minecraft server for quick access |
+| `/mcsrv remove` | Remove a saved Minecraft server |
+| `/mcsrv info` | Get detailed info about a saved server |
+
+### RCON Commands (Admin Only)
+
+| Command | Description |
+|---------|-------------|
+| `/rcon add` | Add a Minecraft RCON server with credentials |
+| `/rcon remove` | Remove a saved RCON server |
+| `/rcon list` | List all saved RCON servers |
+| `/rcon run` | Execute a console command on a Minecraft server |
 
 ### Video Notifier Commands (Admin Only)
 
@@ -139,6 +162,7 @@ npm run dev
 | `/videonotifier add-tiktok` | Add a TikTok channel to monitor |
 | `/videonotifier remove-tiktok` | Remove a TikTok channel from monitoring |
 | `/videonotifier set-channel` | Set the Discord channel for video notifications |
+| `/videonotifier set-style` | Set notification style (embed or simple text) |
 | `/videonotifier toggle` | Enable or disable video notifications |
 | `/videonotifier test-youtube` | Send a test YouTube notification |
 | `/videonotifier test-tiktok` | Send a test TikTok notification |
@@ -226,8 +250,26 @@ In `config.json`, under `videoNotifier`:
 | `tiktokNotificationChannelId` | Separate channel for TikTok notifications (optional) | "" |
 | `youtube.enabled` | Enable YouTube monitoring | true |
 | `tiktok.enabled` | Enable TikTok monitoring | true |
+| `notificationStyle` | Style: `embed` (rich) or `simple` (text only) | `embed` |
 | `embedSettings.includeDescription` | Include video description in embed | true |
 | `embedSettings.descriptionLength` | Max description length | 200 |
+
+### Notification Styles
+
+The video notifier supports two notification styles:
+
+**Rich Embed (Default)** - `notificationStyle: "embed"`
+- Full-color embed with thumbnail
+- Video title, description snippet
+- Channel label and timestamp
+- Best for announcement channels
+
+**Simple Text** - `notificationStyle: "simple"`
+- Plain text notification
+- Compact format
+- Good for busy channels or mobile users
+
+To change styles, use: `/videonotifier set-style style:simple` or `/videonotifier set-style style:embed`
 
 ### Notification Embed Format
 
@@ -444,6 +486,134 @@ To ensure webhook events are genuinely from GitHub:
 
 ---
 
+## 🔄 Auto Config Upgrade
+
+The bot can automatically detect and merge missing settings from backup config files. This is useful when:
+
+- You have an old `config.json` with settings you want to keep
+- You're migrating from an older version of the bot
+- You've created backups with names like `config.backup.json`
+
+### How It Works
+
+On startup, the bot will:
+1. Scan for backup config files (using configurable patterns)
+2. Detect any settings present in backups but missing in the current config
+3. Merge those settings into the current config
+4. Log all migrations for your review
+
+### Backup Filename Patterns
+
+The following patterns are recognized by default:
+- `config.backup.json`
+- `config.old.json`
+- `config.bak.json`
+- `config.backup-*.json` (e.g., `config.backup-2024.json`)
+- `config.v*.json` (e.g., `config.v1.json`)
+- `config(*).json` (e.g., `config(old).json`)
+- `config_old.json`
+- `config-backup.json`
+
+### Configuration
+
+In `config.json`:
+
+```json
+{
+  "autoUpgrade": {
+    "enabled": true,
+    "backupPatterns": [
+      "config.backup.json",
+      "config.old.json",
+      "config.bak.json"
+    ]
+  }
+}
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `enabled` | Enable automatic config upgrades | `true` |
+| `backupPatterns` | Array of filename patterns to scan for | See above |
+
+### Safety Features
+
+- **Never overwrites**: Only adds missing keys, never overwrites existing values
+- **Preserves structure**: Maintains the new config's structure and formatting
+- **Logged migrations**: All changes are logged with their source file
+- **Can be disabled**: Set `autoUpgrade.enabled` to `false` to disable
+
+---
+
+## 🎮 Minecraft Server Tools
+
+The bot includes tools for monitoring Minecraft servers - both Java and Bedrock editions.
+
+### Features
+
+- **Ping any server**: Check status of any Minecraft server
+- **Server saving**: Save frequently-checked servers for quick access
+- **Auto-type detection**: Automatically detects Java vs Bedrock servers
+- **Rich embeds**: Shows player count, MOTD, version, and server icon
+- **Favorites management**: Add, remove, and list saved servers
+
+### Examples
+
+```bash
+# Ping a server
+/mcsrv ping address:play.example.com
+
+# Save a server
+/mcsrv add address:play.example.com name:"My Server"
+
+# List saved servers
+/mcsrv list
+
+# Get detailed info
+/mcsrv info address:play.example.com
+```
+
+---
+
+## 🖥️ RCON Console
+
+Execute Minecraft server console commands directly from Discord using the RCON protocol.
+
+### Setup
+
+1. Enable RCON in your `server.properties`:
+   ```
+   enable-rcon=true
+   rcon.port=25575
+   rcon.password=your_secure_password
+   ```
+2. Restart your Minecraft server
+3. Add the server to the bot: `/rcon add name:survival address:play.example.com:25575 password:yourpass`
+
+### Example Commands
+
+```bash
+# Add an operator
+/rcon run server:survival command:op PlayerName
+
+# Broadcast a message
+/rcon run server:survival command:say Server restart in 5 minutes
+
+# Check player list
+/rcon run server:survival command:list
+
+# Whitelist a player
+/rcon run server:survival command:whitelist add PlayerName
+```
+
+### Security
+
+- Requires Discord Administrator permission
+- RCON passwords are stored in `config.json` - ensure it's not committed to version control
+- Use strong, unique passwords for RCON access
+
+---
+
 ## 🎤 Voice Channel Setup
 
 The bot provides multiple ways to create temporary voice channels:
@@ -488,7 +658,10 @@ utility-discord-bot/
 │   ├── setup.js
 │   ├── help.js
 │   ├── videonotifier.js
-│   └── github.js
+│   ├── github.js
+│   ├── mcsrv.js
+│   ├── rcon.js
+│   └── auto-reload.js
 ├── components/         # Button and modal handlers
 │   ├── CreateTempChannelButton.js
 │   └── CreateTempChannelModal.js
@@ -498,10 +671,14 @@ utility-discord-bot/
 │   └── voiceStateUpdate.js
 ├── utils/             # Utility modules
 │   ├── ConfigLoader.js
+│   ├── ConfigBackupManager.js
 │   ├── Logger.js
 │   ├── TempChannelManager.js
 │   ├── VideoNotifierManager.js
 │   ├── GitHubNotifierManager.js
+│   ├── MinecraftPing.js
+│   ├── MinecraftPingBedrock.js
+│   ├── MinecraftRcon.js
 │   └── fileLoader.js
 ├── config.json        # Bot configuration
 ├── .env.example       # Environment variables template

@@ -76,5 +76,18 @@
   "autoReload": {
     "enabled": true,
     "intervalSeconds": 60
+  },
+  "autoUpgrade": {
+    "enabled": true,
+    "backupPatterns": [
+      "config.backup.json",
+      "config.old.json",
+      "config.bak.json",
+      "config.backup-*.json",
+      "config.v*.json",
+      "config(*).json",
+      "config_old.json",
+      "config-backup.json"
+    ]
   }
 }

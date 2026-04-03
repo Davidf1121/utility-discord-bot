@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
 import { readFileSync } from 'fs';
-import { loadConfig, reloadConfig, configPath } from './utils/ConfigLoader.js';
+import { loadConfig, loadConfigWithUpgrade, reloadConfig, configPath } from './utils/ConfigLoader.js';
 import { createLogger } from './utils/Logger.js';
 import { TempChannelManager } from './utils/TempChannelManager.js';
 import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-let config = loadConfig();
+let config = loadConfigWithUpgrade();
 let reloadTimer = null;
 const logger = createLogger('Bot');
 

@@ -124,6 +124,16 @@ Fill in the form and a new voice channel will appear!
 /github test-push
 ```
 
+**Test 6: Ping a Minecraft server**
+```
+/mcsrv ping address:play.example.com
+```
+
+**Test 7: Toggle auto-reload**
+```
+/auto-reload enabled:true
+```
+
 ---
 
 ## Setting Up Video Notifier
@@ -158,6 +168,71 @@ Fill in the form and a new voice channel will appear!
 - List all channels: `/videonotifier list`
 - Remove a channel: `/videonotifier remove-youtube` or `/videonotifier remove-tiktok`
 - Toggle on/off: `/videonotifier toggle`
+- Change notification style: `/videonotifier set-style style:simple`
+
+---
+
+## Setting Up Minecraft Server Tools
+
+### Ping a Server
+```
+/mcsrv ping address:play.example.com
+```
+- Supports both Java and Bedrock editions
+- Auto-detects server type
+- Shows player count, version, MOTD, and server icon
+
+### Save Favorite Servers
+```
+/mcsrv add address:play.example.com name:"My Server" type:java
+```
+- Save frequently-checked servers
+- Quick access via autocomplete
+- Track server description and type
+
+### View Saved Servers
+```
+/mcsrv list
+```
+
+---
+
+## Setting Up RCON Console
+
+RCON lets you execute Minecraft server commands from Discord.
+
+### 1. Enable RCON on Your Minecraft Server
+
+Edit `server.properties` on your Minecraft server:
+```properties
+enable-rcon=true
+rcon.port=25575
+rcon.password=your_secure_password
+```
+
+Restart your Minecraft server.
+
+### 2. Add Server to Bot
+```
+/rcon add name:survival address:play.example.com:25575 password:yourpass
+```
+
+### 3. Execute Commands
+```
+/rcon run server:survival command:list
+/rcon run server:survival command:say Hello from Discord!
+/rcon run server:survival command:op PlayerName
+```
+
+### Common RCON Commands
+- `list` - Show online players
+- `say <message>` - Broadcast a message
+- `op <player>` - Give operator status
+- `gamemode <mode> <player>` - Change game mode
+- `whitelist add <player>` - Add to whitelist
+- `save-all` - Save the world
+
+> ⚠️ **Security**: RCON commands require Discord Administrator permission. RCON passwords are stored in `config.json` - keep this file secure!
 
 ---
 
@@ -216,6 +291,55 @@ Fill in the form and a new voice channel will appear!
 - Ensure the notification channel is set: `/github set-channel`
 - Test with: `/github test-push`
 
+### Minecraft server ping fails
+- Verify the server address is correct
+- Check that `features.minecraftServer` is true in config.json
+- For Bedrock servers, specify the type: `/mcsrv ping address:play.example.com type:bedrock`
+- Some servers block ping requests - this is normal
+
+### RCON connection fails
+- Verify RCON is enabled in `server.properties`
+- Check the RCON port is correct (default: 25575)
+- Ensure the password matches exactly
+- Check firewall rules allow RCON connections
+- The bot and server must be able to communicate directly
+
+### Auto config upgrade not working
+- Check that `autoUpgrade.enabled` is true (default)
+- Ensure backup files match the patterns in `autoUpgrade.backupPatterns`
+- Only **missing** keys are migrated - existing values are never overwritten
+- Check bot logs for migration messages
+
+---
+
+## Auto Config Upgrade
+
+The bot can automatically merge settings from old config files.
+
+### How It Works
+When the bot starts, it scans for backup config files (like `config.backup.json`, `config.old.json`) and merges any missing settings into your current config.
+
+### Disable Auto-Upgrade
+If you don't want this feature:
+```json
+{
+  "autoUpgrade": {
+    "enabled": false
+  }
+}
+```
+
+### Backup File Patterns
+The bot recognizes these patterns by default:
+- `config.backup.json`
+- `config.old.json`
+- `config.bak.json`
+- `config.backup-*.json`
+- `config.v*.json`
+- `config(*).json`
+- `config_old.json`
+- `config-backup.json`
+
 ---
 
 ## Configuration Tips
@@ -235,6 +359,14 @@ Fill in the form and a new voice channel will appear!
 - Adjust `deleteDelay` if you want channels to persist longer
 - Set `defaultUserLimit` based on your community size
 - Customize GitHub embed colors per event type
+- Change video notification style: `/videonotifier set-style style:embed` or `style:simple`
+
+### Auto-Reload
+Enable auto-reload to apply config changes without restarting:
+```
+/auto-reload enabled:true
+```
+This reloads `config.json` every 60 seconds (configurable via `autoReload.intervalSeconds`).
 
 ---
 

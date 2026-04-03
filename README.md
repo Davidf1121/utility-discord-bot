@@ -20,11 +20,6 @@ A modular, configurable Discord bot with utility functionality built with Discor
 - **🧩 Modular Architecture**: Easy to extend with new commands and features
 - **⚙️ Configuration-Based**: All settings externalized in `config.json`
 - **🔄 Auto Config Upgrade**: Automatically merges settings from backup config files
-- **🔄 Multiple Creation Methods**:
-  - Slash command `/create` with modal form
-  - Setup command `/setup` to place control buttons
-  - Join a "Create Voice Channel" voice channel for instant creation
-- **🧹 Auto-Cleanup**: Channels automatically delete when they become empty
 - **🎨 Customizable**: Configure colors, delays, limits, notification styles, and more
 
 ---

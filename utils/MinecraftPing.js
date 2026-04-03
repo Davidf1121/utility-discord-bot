@@ -65,7 +65,7 @@ export class MinecraftPing {
         },
         favicon: response.favicon || null,
         latency: Math.round(response.latency || 0),
-        serverType: this.detectServerType(response.version?.name || '')
+        serverType: this.detectServerType(response)
       };
 
       return result;
@@ -171,27 +171,34 @@ export class MinecraftPing {
       .trim();
   }
 
-  detectServerType(versionString) {
-    if (!versionString) return 'Unknown';
+  detectServerType(response) {
+    if (!response) return 'Unknown';
 
-    const version = versionString.toLowerCase();
+    // Check version.name first (original behavior)
+    const versionName = (response.version?.name || '').toLowerCase();
 
-    if (version.includes('paper')) return 'Paper';
-    if (version.includes('spigot')) return 'Spigot';
-    if (version.includes('craftbukkit')) return 'CraftBukkit';
-    if (version.includes('fabric')) return 'Fabric';
-    if (version.includes('forge')) return 'Forge';
-    if (version.includes('sponge')) return 'Sponge';
-    if (version.includes('velocity')) return 'Velocity';
-    if (version.includes('bungeecord')) return 'BungeeCord';
-    if (version.includes('waterfall')) return 'Waterfall';
-    if (version.includes('purpur')) return 'Purpur';
-    if (version.includes('pufferfish')) return 'Pufferfish';
-    if (version.includes('tuinity')) return 'Tuinity';
-    if (version.includes('yatopia')) return 'Yatopia';
-    if (version.includes('mohist')) return 'Mohist';
-    if (version.includes('catserver')) return 'CatServer';
-    if (version.includes('kettle')) return 'Kettle';
+    // Then check description/MOTD for server software keywords
+    const cleanDescription = this.cleanMOTD(response.description || '').toLowerCase();
+
+    // Combine both sources for detection
+    const textToCheck = `${versionName} ${cleanDescription}`;
+
+    if (textToCheck.includes('paper')) return 'Paper';
+    if (textToCheck.includes('spigot')) return 'Spigot';
+    if (textToCheck.includes('craftbukkit')) return 'CraftBukkit';
+    if (textToCheck.includes('fabric')) return 'Fabric';
+    if (textToCheck.includes('forge')) return 'Forge';
+    if (textToCheck.includes('sponge')) return 'Sponge';
+    if (textToCheck.includes('velocity')) return 'Velocity';
+    if (textToCheck.includes('bungeecord')) return 'BungeeCord';
+    if (textToCheck.includes('waterfall')) return 'Waterfall';
+    if (textToCheck.includes('purpur')) return 'Purpur';
+    if (textToCheck.includes('pufferfish')) return 'Pufferfish';
+    if (textToCheck.includes('tuinity')) return 'Tuinity';
+    if (textToCheck.includes('yatopia')) return 'Yatopia';
+    if (textToCheck.includes('mohist')) return 'Mohist';
+    if (textToCheck.includes('catserver')) return 'CatServer';
+    if (textToCheck.includes('kettle')) return 'Kettle';
 
     return 'Vanilla';
   }

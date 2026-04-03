@@ -24,13 +24,14 @@ export class MinecraftRcon {
     try {
       const { Rcon } = await import('rcon-client');
       
-      const connection = Rcon.connect({
+      const connection = new Rcon({
         host: server.host,
         port: server.port,
         password: server.password,
         timeout: this.timeout
       });
 
+      await connection.connect();
       this.connections.set(key, connection);
       
       this.logger.info(`Connected to RCON: ${server.host}:${server.port}`);

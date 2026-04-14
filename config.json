@@ -134,6 +134,12 @@
     "enabled": true,
     "intervalSeconds": 60
   },
+  "logging": {
+    "showTimestamp": true,
+    "defaultLevel": "INFO",
+    "modules": {},
+    "autoReloadLogLevel": "INFO"
+  },
   "autoUpgrade": {
     "enabled": true,
     "backupPatterns": [

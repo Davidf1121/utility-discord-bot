@@ -2,8 +2,9 @@ import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
 import { readFileSync } from 'fs';
 import { loadConfig, loadConfigWithUpgrade, reloadConfig, configPath } from './utils/ConfigLoader.js';
-import { createLogger } from './utils/Logger.js';
+import { createLogger, setLogConfig } from './utils/Logger.js';
 import { TempChannelManager } from './utils/TempChannelManager.js';
+
 import { TicketManager } from './utils/TicketManager.js';
 import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
 import { GitHubNotifierManager } from './utils/GitHubNotifierManager.js';
@@ -17,8 +18,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let config = loadConfigWithUpgrade();
+setLogConfig(config);
 let reloadTimer = null;
 const logger = createLogger('Bot');
+const autoReloadLogger = createLogger('AutoReload');
 
 const client = new Client({
   intents: [
@@ -49,6 +52,7 @@ client.minecraftRcon = minecraftRcon;
 
 function updateConfigManagers(newConfig) {
   config = newConfig;
+  setLogConfig(config);
   tempChannelManager.config = config;
   ticketManager.config = config;
   videoNotifierManager.config = config;
@@ -61,21 +65,21 @@ function updateConfigManagers(newConfig) {
 
 function startAutoReload() {
   if (!config.autoReload?.enabled) {
-    logger.info('Auto-reload is disabled in config');
+    autoReloadLogger.info('Auto-reload is disabled in config');
     return;
   }
 
   const intervalMs = (config.autoReload.intervalSeconds || 60) * 1000;
-  logger.info(`Starting auto-reload with interval: ${intervalMs}ms`);
+  autoReloadLogger.info(`Starting auto-reload with interval: ${intervalMs}ms`);
 
   reloadTimer = setInterval(() => {
-    logger.debug('Attempting to reload config...');
+    autoReloadLogger.debug('Attempting to reload config...');
     const newConfig = reloadConfig();
     if (newConfig) {
       updateConfigManagers(newConfig);
-      logger.info('Config auto-reloaded successfully');
+      autoReloadLogger.info('Config auto-reloaded successfully');
     } else {
-      logger.error('Failed to auto-reload config');
+      autoReloadLogger.error('Failed to auto-reload config');
     }
   }, intervalMs);
 }
@@ -84,7 +88,7 @@ function stopAutoReload() {
   if (reloadTimer) {
     clearInterval(reloadTimer);
     reloadTimer = null;
-    logger.info('Auto-reload stopped');
+    autoReloadLogger.info('Auto-reload stopped');
   }
 }
 

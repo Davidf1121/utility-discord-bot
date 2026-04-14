@@ -270,7 +270,7 @@ export class MinecraftPing {
     if (!safeResult.success) {
       return {
         embed: {
-          color: colorsMcsrv.offline || colors.error || 15548997,
+          color: colorsMcsrv.offline || colors.mcsrv || colors.error || 15548997,
           title: `❌ ${safeResult.host}${safeResult.port ? `:${safeResult.port}` : ''}`,
           description: 'Server is offline or unreachable',
           fields: [
@@ -288,7 +288,7 @@ export class MinecraftPing {
     const iconUrl = iconBuffer ? `attachment://icon.png` : null;
 
     const embed = {
-      color: colorsMcsrv.online || colors.success || 5793287,
+      color: colorsMcsrv.online || colors.mcsrv || colors.success || 5793287,
       title: `✅ ${this.formatServerAddress(safeResult.host, safeResult.port, safeResult.type)}`,
       description: String(safeResult.motd.clean || 'Server Online'),
       thumbnail: iconUrl ? { url: iconUrl } : null,

@@ -198,7 +198,7 @@ async function handleList(interaction) {
   }));
 
   const embed = new EmbedBuilder()
-    .setColor(config.embedColors.primary)
+    .setColor(config.embedColors.rcon || config.embedColors.primary)
     .setTitle('🎮 Saved RCON Servers')
     .setDescription(`Found ${savedServers.length} saved server${savedServers.length > 1 ? 's' : ''}`)
     .addFields(fields)

@@ -82,7 +82,7 @@ export class TicketManager {
           { name: 'Opened by', value: `<@${user.id}>`, inline: true },
           { name: 'Ticket ID', value: ticketNumber.toString().padStart(4, '0'), inline: true }
         )
-        .setColor(this.config.embedColors.primary)
+        .setColor(this.config.embedColors.ticket || this.config.embedColors.primary)
         .setTimestamp();
 
       const closeButton = new ActionRowBuilder().addComponents(

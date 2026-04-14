@@ -172,7 +172,7 @@ export class VideoNotifierManager {
 
   createEmbed(video, platform, channelLabel) {
     const embedColor = platform === 'youtube' 
-      ? this.config.embedColors.primary 
+      ? (this.config.embedColors.videoNotifier || this.config.embedColors.primary)
       : 0x000000;
     
     const embed = new EmbedBuilder()

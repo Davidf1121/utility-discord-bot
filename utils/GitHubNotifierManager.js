@@ -129,7 +129,7 @@ export class GitHubNotifierManager {
     const pusherAvatar = data.sender?.avatar_url || '';
 
     const embed = new EmbedBuilder()
-      .setColor(this.config.github.embedColors?.push || 5793287)
+      .setColor(this.config.github.embedColors?.push || this.config.embedColors?.github || 5793287)
       .setAuthor({ name: pusher, iconURL: pusherAvatar, url: data.sender?.html_url })
       .setTitle(`[${repository}:${branch}] ${commitsCount} new commit${commitsCount > 1 ? 's' : ''}`)
       .setURL(data.compare || data.commits[0].url)
@@ -154,7 +154,7 @@ export class GitHubNotifierManager {
     const prNumber = pull_request.number;
 
     const embed = new EmbedBuilder()
-      .setColor(this.config.github.embedColors?.pull_request || 5783218)
+      .setColor(this.config.github.embedColors?.pull_request || this.config.embedColors?.github || 5783218)
       .setAuthor({ name: sender?.login || 'unknown', iconURL: sender?.avatar_url, url: sender?.html_url })
       .setTitle(`[${repository?.full_name || 'repo'}] Pull Request ${action}: #${prNumber} ${prTitle}`)
       .setURL(prUrl)
@@ -179,7 +179,7 @@ export class GitHubNotifierManager {
     const issueNumber = issue.number;
 
     const embed = new EmbedBuilder()
-      .setColor(this.config.github.embedColors?.issues || 15548997)
+      .setColor(this.config.github.embedColors?.issues || this.config.embedColors?.github || 15548997)
       .setAuthor({ name: sender?.login || 'unknown', iconURL: sender?.avatar_url, url: sender?.html_url })
       .setTitle(`[${repository?.full_name || 'repo'}] Issue ${action}: #${issueNumber} ${issueTitle}`)
       .setURL(issueUrl)

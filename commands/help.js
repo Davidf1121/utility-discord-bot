@@ -7,10 +7,12 @@ export default {
   async execute(interaction) {
     const config = interaction.client.tempChannelManager.config;
     
+    const prefix = interaction.client.tempChannelManager.config.prefix || '!';
+    
     const embed = new EmbedBuilder()
       .setColor(config.embedColors.primary)
       .setTitle('📚 Utility Discord Bot - Help')
-      .setDescription('A powerful utility bot for temporary voice channels and video notifications.\n\n**Bot Author:** Davidf aka darynx')
+      .setDescription(`A powerful utility bot for temporary voice channels and video notifications.\n\n**Bot Author:** Davidf aka darynx\n\n**Text Commands:** You can also use commands with the prefix \`${prefix}\` (e.g., \`${prefix}ping\` or \`${prefix}mcsrv ping play.example.com\`)`)
       .setThumbnail(interaction.client.user.displayAvatarURL())
       
       // General Commands Section

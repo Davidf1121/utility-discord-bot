@@ -4,6 +4,7 @@
   "guildId": "",
   "controlChannelId": "",
   "voiceCategoryId": "",
+  "defaultEmbedThumbnail": null,
   "tempChannelSettings": {
     "deleteDelay": 5000,
     "defaultUserLimit": 10,
@@ -12,17 +13,17 @@
     "allowUserLimitChange": true
   },
   "embedColors": {
-    "primary": 2894668,
+    "primary": 2500399,
     "success": 5793287,
     "warning": 16775964,
     "error": 15548997,
-    "tempVoice": 2894668,
-    "ticket": 2894668,
-    "videoNotifier": 2894668,
-    "github": 2894668,
-    "mcsrv": 2894668,
-    "rcon": 2894668,
-    "autoModeration": 2894668
+    "tempVoice": 2500399,
+    "ticket": 2500399,
+    "videoNotifier": 2500399,
+    "github": 2500399,
+    "mcsrv": 2500399,
+    "rcon": 2500399,
+    "autoModeration": 2500399
   },
   "features": {
     "tempVoiceChannels": true,

@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { getDefaultThumbnail } from '../utils/ConfigLoader.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -10,6 +11,7 @@ export default {
     const embed = new EmbedBuilder()
       .setColor(config.embedColors.tempVoice || config.embedColors.primary)
       .setTitle('🎤 Temporary Voice Channels')
+      .setThumbnail(getDefaultThumbnail(config, interaction.client))
       .setDescription('Click the button below to create your own temporary voice channel!')
       .addFields(
         { name: 'How it works', value: '1. Click "Create Channel"\n2. Customize your channel\n3. Your channel is created!\n4. It auto-deletes when empty', inline: false },

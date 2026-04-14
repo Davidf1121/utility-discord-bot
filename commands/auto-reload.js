@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { getDefaultThumbnail } from '../utils/ConfigLoader.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -33,6 +34,7 @@ export default {
     const embed = new EmbedBuilder()
       .setColor(config.embedColors.primary)
       .setTitle('🔄 Auto-Reload Configuration')
+      .setThumbnail(getDefaultThumbnail(config, interaction.client))
       .setDescription(`Auto-reload has been ${enabled ? 'enabled' : 'disabled'}`)
       .addFields(
         {

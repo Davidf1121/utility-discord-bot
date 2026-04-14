@@ -56,6 +56,13 @@ export function saveConfig(config) {
   }
 }
 
+export function getDefaultThumbnail(config, client) {
+  if (config.defaultEmbedThumbnail) {
+    return config.defaultEmbedThumbnail;
+  }
+  return client.user.displayAvatarURL();
+}
+
 export function reloadConfig() {
   try {
     const configData = readFileSync(configPath, 'utf-8');

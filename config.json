@@ -21,7 +21,49 @@
     "autoCleanup": true,
     "videoNotifier": true,
     "minecraftServer": true,
-    "rcon": true
+    "rcon": true,
+    "autoModeration": true
+  },
+  "autoModeration": {
+    "enabled": true,
+    "logChannelId": "",
+    "triggers": {
+      "massMention": {
+        "enabled": true,
+        "threshold": 5,
+        "action": "delete"
+      },
+      "messageSpam": {
+        "enabled": true,
+        "messageCount": 5,
+        "timeWindowSeconds": 10,
+        "action": "mute"
+      },
+      "newAccount": {
+        "enabled": true,
+        "maxAccountAgeDays": 7,
+        "action": "warn"
+      },
+      "linkSpam": {
+        "enabled": true,
+        "maxLinks": 3,
+        "action": "delete"
+      },
+      "scammerDetection": {
+        "enabled": true,
+        "sensitivity": "medium",
+        "noAvatarRequired": true,
+        "maxAccountAgeDays": 3,
+        "action": "kick"
+      }
+    },
+    "actions": {
+      "deleteMessage": true,
+      "warnUser": true,
+      "muteDurationMs": 300000,
+      "kickUser": false,
+      "banUser": false
+    }
   },
   "videoNotifier": {
     "enabled": true,

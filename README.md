@@ -13,6 +13,7 @@ A modular, configurable Discord bot with utility functionality built with Discor
 ## ✨ Features
 
 - **🎤 Temporary Voice Channels**: Create custom voice channels that auto-delete when empty
+- **🛡️ Auto-Moderation**: Automatically protect your server from spam, mass mentions, link spam, and suspicious new accounts
 - **📺 Video Notifier**: Monitor YouTube/TikTok channels and get notifications when new content is posted
 - **🐙 GitHub Integration**: Receive Discord notifications for GitHub events (pushes, pull requests, issues)
 - **🎮 Minecraft Server Tools**: Ping Java/Bedrock servers, save favorites, and view status
@@ -109,6 +110,23 @@ npm run dev
 | `embedColors.warning` | Warning embed color | 16775964 (Yellow) |
 | `embedColors.error` | Error embed color | 15548997 (Red) |
 
+### 🛡️ Auto-Moderation Configuration
+
+In `config.json`, under `autoModeration`:
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `enabled` | Enable/disable auto-moderation | true |
+| `logChannelId` | Discord channel ID for moderation logs | "" |
+| `triggers.massMention.enabled` | Enable mass mention detection | true |
+| `triggers.massMention.threshold` | Number of mentions to trigger action | 5 |
+| `triggers.messageSpam.enabled` | Enable message spam detection | true |
+| `triggers.messageSpam.messageCount` | Max messages allowed in time window | 5 |
+| `triggers.messageSpam.timeWindowSeconds` | Time window for spam detection | 10 |
+| `triggers.scammerDetection.enabled` | Enable basic scammer detection | true |
+| `triggers.newAccount.enabled` | Enable new account alerts | true |
+| `actions.muteDurationMs` | Default duration for timeouts (ms) | 300000 |
+
 ---
 
 ## 📋 Commands
@@ -120,6 +138,16 @@ npm run dev
 | `/ping` | Check bot latency |
 | `/help` | Display available commands and bot information |
 | `/auto-reload` | Enable/disable automatic config reloading |
+
+### 🛡️ Auto-Moderation
+
+| Feature | Description |
+|---------|-------------|
+| **Mass Mention** | Detects and acts on messages with excessive user/role mentions |
+| **Message Spam** | Detects rapid-fire messaging from a single user |
+| **Link Spam** | Detects messages containing too many links |
+| **Scammer Detection** | Flags new accounts with suspicious keywords (nitro, giveaway, etc.) |
+| **New Account Alert** | Notifies about messages from very young accounts |
 
 ### Voice Channel Commands
 

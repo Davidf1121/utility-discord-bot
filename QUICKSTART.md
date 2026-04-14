@@ -88,6 +88,7 @@ You should see:
 [Bot INFO] Loaded command: help
 [Bot INFO] Loaded command: videonotifier
 [Bot INFO] Loaded command: github
+[Bot INFO] Loaded event: messageCreate
 ```
 
 ### 6. Test the Bot
@@ -133,6 +134,10 @@ Fill in the form and a new voice channel will appear!
 ```
 /auto-reload enabled:true
 ```
+
+**Test 8: Test Auto-Moderation**
+- Send a message with 5+ mentions (e.g., @user1 @user2 @user3 @user4 @user5)
+- If enabled, the message should be deleted automatically.
 
 ---
 
@@ -309,6 +314,13 @@ Restart your Minecraft server.
 - Ensure backup files match the patterns in `autoUpgrade.backupPatterns`
 - Only **missing** keys are migrated - existing values are never overwritten
 - Check bot logs for migration messages
+
+### Auto-moderation not working
+- Ensure `features.autoModeration` and `autoModeration.enabled` are both true in `config.json`
+- Verify the bot has **Message Content Intent** enabled in the Developer Portal
+- Make sure the bot has "Manage Messages" permission in your server
+- Administrators and members with "Manage Messages" permission are ignored by auto-moderation
+- Check that the triggers you want are enabled under `autoModeration.triggers`
 
 ---
 

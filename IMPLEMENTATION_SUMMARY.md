@@ -20,12 +20,14 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 - **TempChannelManager.js** - Manages temp channel lifecycle (create, delete, schedule)
 - **VideoNotifierManager.js** - Monitors YouTube/TikTok channels via RSS feeds
 - **GitHubNotifierManager.js** - Receives GitHub webhooks and sends notifications
+- **AutoModerationManager.js** - Monitors server messages and takes configured actions against spam and malicious actors
 - **fileLoader.js** - Utility to load JS files from directories
 
 ### Events (`events/`)
 - **ready.js** - Bot startup, sets status, verifies control channel, initializes managers
 - **interactionCreate.js** - Handles slash commands, button clicks, modal submissions
 - **voiceStateUpdate.js** - Handles voice channel joins/leaves for auto-creation and deletion
+- **messageCreate.js** - Monitors server messages for auto-moderation rules
 
 ### Components (`components/`)
 - **CreateTempChannelButton.js** - Opens the channel creation modal
@@ -63,7 +65,15 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 - Test command for push notifications
 - Optional webhook secret verification
 
-### 4. Multiple Creation Methods
+### 4. Auto-Moderation
+- Detects mass mentions, message spam, and link spam
+- Identifies potential scammers (new accounts + keywords)
+- Provides alerts for new account messages
+- Supports multiple actions: Delete, Warn, Mute, Kick, Ban
+- Detailed logging of all moderation actions
+- Automatically bypasses staff/administrators
+
+### 5. Multiple Creation Methods
 - **/create command** - Opens modal form directly
 - **/setup command** - Places a button in a text channel
 - **Voice channel join** - Join a specific channel to auto-create (optional)
@@ -139,6 +149,7 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 | features.tempVoiceChannels | Enable/disable feature |
 | features.autoCleanup | Enable/disable auto-delete |
 | features.videoNotifier | Enable/disable video notifier |
+| features.autoModeration | Enable/disable auto-moderation |
 
 ### Video Notifier Settings
 | Setting | Description |
@@ -164,6 +175,18 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 | github.embedColors.pull_request | Color for PR notifications |
 | github.embedColors.issues | Color for issue notifications |
 | github.embedColors.default | Default embed color |
+
+### Auto-Moderation Settings
+| Setting | Description |
+|---------|-------------|
+| autoModeration.enabled | Enable/disable auto-moderation |
+| autoModeration.logChannelId | Channel for moderation logs |
+| autoModeration.triggers.massMention.enabled | Enable mass mention detection |
+| autoModeration.triggers.messageSpam.enabled | Enable spam detection |
+| autoModeration.triggers.linkSpam.enabled | Enable link spam detection |
+| autoModeration.triggers.scammerDetection.enabled | Enable scam detection |
+| autoModeration.triggers.newAccount.enabled | Enable new account alerts |
+| autoModeration.actions.muteDurationMs | Default mute duration |
 
 ## Validation Results
 - ✅ All JavaScript files pass syntax check

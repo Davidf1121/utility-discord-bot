@@ -1,6 +1,6 @@
 import { createLogger } from './Logger.js';
 import { PermissionsBitField, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } from 'discord.js';
-import { saveConfig } from './ConfigLoader.js';
+import { saveConfig, getDefaultThumbnail } from './ConfigLoader.js';
 
 export class TicketManager {
   constructor(client, config) {
@@ -76,6 +76,7 @@ export class TicketManager {
 
       const welcomeEmbed = new EmbedBuilder()
         .setTitle(`Ticket: ${title}`)
+        .setThumbnail(getDefaultThumbnail(this.config, this.client))
         .setDescription(ticketConfig.ticketWelcomeMessage.replace('{user}', `<@${user.id}>`))
         .addFields(
           { name: 'Description', value: description || 'No description provided' },
@@ -113,6 +114,7 @@ export class TicketManager {
     try {
       const closingEmbed = new EmbedBuilder()
         .setTitle('Ticket Closed')
+        .setThumbnail(getDefaultThumbnail(this.config, this.client))
         .setDescription(`This ticket has been closed by <@${closedBy.id}>.`)
         .setColor(this.config.embedColors.warning)
         .setTimestamp();

@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } from 'discord.js';
+import { getDefaultThumbnail } from '../utils/ConfigLoader.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -30,6 +31,7 @@ export default {
       const embed = new EmbedBuilder()
         .setColor(config.embedColors.ticket || config.embedColors.primary)
         .setTitle('🎫 Support Tickets')
+        .setThumbnail(getDefaultThumbnail(config, interaction.client))
         .setDescription('Need help? Click the button below to open a support ticket!')
         .addFields(
           { name: 'Before Opening', value: 'Please ensure you have read the rules and FAQ before opening a ticket.', inline: false },

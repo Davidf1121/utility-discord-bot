@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
-import { saveConfig, loadConfig } from '../utils/ConfigLoader.js';
+import { saveConfig, loadConfig, getDefaultThumbnail } from '../utils/ConfigLoader.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -47,8 +47,26 @@ export default {
                 .setRequired(true)))
         .addSubcommand(subcommand =>
           subcommand
+            .setName('thumbnail')
+            .setDescription('Manage default embed thumbnail')
+            .addStringOption(option =>
+              option
+                .setName('action')
+                .setDescription('Action to perform')
+                .setRequired(true)
+                .addChoices(
+                  { name: 'Set custom URL', value: 'set' },
+                  { name: 'Clear (use bot avatar)', value: 'clear' },
+                  { name: 'Show current', value: 'show' }
+                ))
+            .addStringOption(option =>
+              option
+                .setName('url')
+                .setDescription('The thumbnail URL (required for set)')))
+        .addSubcommand(subcommand =>
+          subcommand
             .setName('reset')
-            .setDescription('Reset embed colors to defaults'))),
+            .setDescription('Reset embed settings to defaults'))),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -59,6 +77,8 @@ export default {
         return handleEmbedColors(interaction);
       } else if (subcommand === 'color') {
         return handleSetEmbedColor(interaction);
+      } else if (subcommand === 'thumbnail') {
+        return handleEmbedThumbnail(interaction);
       } else if (subcommand === 'reset') {
         return handleResetEmbedColors(interaction);
       }
@@ -75,6 +95,7 @@ async function handleListSettings(interaction) {
   
   const embed = new EmbedBuilder()
     .setTitle('⚙️ Bot Settings')
+    .setThumbnail(getDefaultThumbnail(config, interaction.client))
     .setColor(config.embedColors.primary)
     .addFields(
       { name: 'Voice Category ID', value: config.voiceCategoryId || 'Not set', inline: true },
@@ -98,6 +119,7 @@ async function handleEmbedColors(interaction) {
   
   const embed = new EmbedBuilder()
     .setTitle('🎨 Embed Colors')
+    .setThumbnail(getDefaultThumbnail(config, interaction.client))
     .setColor(colors.primary)
     .setDescription('Current color configuration for embeds:')
     .addFields(
@@ -153,23 +175,76 @@ async function handleResetEmbedColors(interaction) {
   const config = loadConfig();
   
   config.embedColors = {
-    "primary": 2894668,
+    "primary": 2500399,
     "success": 5793287,
     "warning": 16775964,
     "error": 15548997,
-    "tempVoice": 2894668,
-    "ticket": 2894668,
-    "videoNotifier": 2894668,
-    "github": 2894668,
-    "mcsrv": 2894668,
-    "rcon": 2894668,
-    "autoModeration": 2894668
+    "tempVoice": 2500399,
+    "ticket": 2500399,
+    "videoNotifier": 2500399,
+    "github": 2500399,
+    "mcsrv": 2500399,
+    "rcon": 2500399,
+    "autoModeration": 2500399
   };
+  
+  config.defaultEmbedThumbnail = null;
   
   saveConfig(config);
 
   await interaction.reply({ 
-    content: '✅ Embed colors have been reset to default values.', 
+    content: '✅ Embed settings have been reset to default values.', 
     ephemeral: true 
   });
+}
+
+async function handleEmbedThumbnail(interaction) {
+  const action = interaction.options.getString('action');
+  const url = interaction.options.getString('url');
+  const config = loadConfig();
+
+  if (action === 'show') {
+    const current = config.defaultEmbedThumbnail || 'Bot Avatar (default)';
+    const embed = new EmbedBuilder()
+      .setTitle('🖼️ Default Embed Thumbnail')
+      .setColor(config.embedColors.primary)
+      .setDescription(`Current setting: **${current}**`)
+      .setTimestamp();
+    
+    if (config.defaultEmbedThumbnail) {
+      embed.setThumbnail(config.defaultEmbedThumbnail);
+    } else {
+      embed.setThumbnail(interaction.client.user.displayAvatarURL());
+    }
+
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  if (action === 'clear') {
+    config.defaultEmbedThumbnail = null;
+    saveConfig(config);
+    return interaction.reply({ content: '✅ Default embed thumbnail cleared. Now using bot avatar.', ephemeral: true });
+  }
+
+  if (action === 'set') {
+    if (!url) {
+      return interaction.reply({ content: '❌ Please provide a URL when using "Set custom URL".', ephemeral: true });
+    }
+
+    if (!url.startsWith('http')) {
+      return interaction.reply({ content: '❌ Invalid URL. Must start with http:// or https://', ephemeral: true });
+    }
+
+    config.defaultEmbedThumbnail = url;
+    saveConfig(config);
+
+    const embed = new EmbedBuilder()
+      .setTitle('✅ Thumbnail Updated')
+      .setColor(config.embedColors.primary)
+      .setDescription('Default embed thumbnail has been updated.')
+      .setThumbnail(url)
+      .setTimestamp();
+
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
 }

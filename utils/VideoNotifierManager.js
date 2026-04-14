@@ -1,7 +1,7 @@
 import { createLogger } from './Logger.js';
 import { EmbedBuilder } from 'discord.js';
 import Parser from 'rss-parser';
-import { saveConfig } from './ConfigLoader.js';
+import { saveConfig, getDefaultThumbnail } from './ConfigLoader.js';
 
 export class VideoNotifierManager {
   constructor(client, config, configPath = null) {
@@ -179,6 +179,7 @@ export class VideoNotifierManager {
       .setColor(embedColor)
       .setTitle(video.title)
       .setURL(video.link)
+      .setThumbnail(getDefaultThumbnail(this.config, this.client))
       .setTimestamp(new Date(video.pubDate));
 
     const includeDescription = this.config.videoNotifier.embedSettings?.includeDescription ?? true;

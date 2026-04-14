@@ -1,5 +1,6 @@
 import { createLogger } from './Logger.js';
 import { EmbedBuilder, PermissionsBitField } from 'discord.js';
+import { getDefaultThumbnail } from './ConfigLoader.js';
 
 export class AutoModerationManager {
   constructor(client, config) {
@@ -176,6 +177,7 @@ export class AutoModerationManager {
 
       const embed = new EmbedBuilder()
         .setTitle('Auto-Moderation Action')
+        .setThumbnail(getDefaultThumbnail(this.config, this.client))
         .setColor(this.config.embedColors?.autoModeration || this.config.embedColors?.warning || 0xFFAA00)
         .addFields(
           { name: 'User', value: `${message.author.tag} (${message.author.id})`, inline: true },

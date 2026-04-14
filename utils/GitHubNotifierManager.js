@@ -3,7 +3,7 @@ import { EmbedBuilder } from 'discord.js';
 import express from 'express';
 import bodyParser from 'body-parser';
 import crypto from 'crypto';
-import { saveConfig } from './ConfigLoader.js';
+import { saveConfig, getDefaultThumbnail } from './ConfigLoader.js';
 
 export class GitHubNotifierManager {
   constructor(client, config) {

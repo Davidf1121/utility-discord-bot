@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { getDefaultThumbnail } from '../utils/ConfigLoader.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -13,7 +14,7 @@ export default {
       .setColor(config.embedColors.primary)
       .setTitle('📚 Utility Discord Bot - Help')
       .setDescription(`A powerful utility bot for temporary voice channels and video notifications.\n\n**Bot Author:** Davidf aka darynx\n\n**Text Commands:** You can also use commands with the prefix \`${prefix}\` (e.g., \`${prefix}ping\` or \`${prefix}mcsrv ping play.example.com\`)`)
-      .setThumbnail(interaction.client.user.displayAvatarURL())
+      .setThumbnail(getDefaultThumbnail(config, interaction.client))
       
       // General Commands Section
       .addFields(

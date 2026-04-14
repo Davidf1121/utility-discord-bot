@@ -138,6 +138,31 @@ export default {
         }
       )
 
+      // Auto-Moderation Section
+      .addFields(
+        {
+          name: '🛡️ Auto-Moderation',
+          value: [
+            'Automatically protect your server from spam and malicious actors.',
+            '',
+            '**Triggers:**',
+            '• **Mass Mention** - Detects excessive user or role mentions',
+            '• **Message Spam** - Detects rapid-fire messaging',
+            '• **Link Spam** - Detects excessive links in a single message',
+            '• **Scammer Detection** - Flags new accounts with suspicious keywords',
+            '• **New Account Alerts** - Notifies when very young accounts post',
+            '',
+            '**Actions:**',
+            '• Deleting violating messages',
+            '• Warning users automatically',
+            '• Muting (Timeout), Kicking, or Banning persistent offenders',
+            '',
+            '**Status:** This feature runs automatically on all incoming messages. Configure it in `config.json`.'
+          ].join('\n'),
+          inline: false
+        }
+      )
+
       // Minecraft Server Section
       .addFields(
         {

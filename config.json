@@ -22,7 +22,15 @@
     "videoNotifier": true,
     "minecraftServer": true,
     "rcon": true,
-    "autoModeration": true
+    "autoModeration": true,
+    "ticketSystem": true
+  },
+  "ticketSystem": {
+    "enabled": true,
+    "ticketCategoryId": "",
+    "ticketStaffRoles": [],
+    "ticketWelcomeMessage": "Welcome to your ticket, {user}! Staff will be with you shortly.",
+    "ticketCounter": 0
   },
   "autoModeration": {
     "enabled": true,

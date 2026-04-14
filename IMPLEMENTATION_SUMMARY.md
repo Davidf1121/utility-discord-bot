@@ -18,6 +18,7 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 - **ConfigLoader.js** - Loads and validates config.json
 - **Logger.js** - Colored logging utility (info, warn, error, debug)
 - **TempChannelManager.js** - Manages temp channel lifecycle (create, delete, schedule)
+- **TicketManager.js** - Manages support ticket channels (create, close, permissions)
 - **VideoNotifierManager.js** - Monitors YouTube/TikTok channels via RSS feeds
 - **GitHubNotifierManager.js** - Receives GitHub webhooks and sends notifications
 - **AutoModerationManager.js** - Monitors server messages and takes configured actions against spam and malicious actors
@@ -32,6 +33,9 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 ### Components (`components/`)
 - **CreateTempChannelButton.js** - Opens the channel creation modal
 - **CreateTempChannelModal.js** - Processes channel creation form submission
+- **TicketButton.js** - Opens the ticket creation modal
+- **TicketModal.js** - Processes ticket creation form submission
+- **CloseTicketButton.js** - Closes a support ticket
 
 ### Commands (`commands/`)
 - **ping.js** - Bot latency check
@@ -40,6 +44,7 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 - **help.js** - Displays all available commands
 - **videonotifier.js** - Manage YouTube/TikTok video notifications (Admin only)
 - **github.js** - Manage GitHub webhook notifications (Admin only)
+- **ticket.js** - Manage support tickets and setup (Admin only for setup)
 
 ## Key Features Implemented
 
@@ -73,23 +78,31 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 - Detailed logging of all moderation actions
 - Automatically bypasses staff/administrators
 
-### 5. Multiple Creation Methods
+### 5. Support Ticket System
+- Private support channels with custom title and description
+- Permissions managed for user and staff roles
+- Button-based interaction for opening and closing
+- Persistent ticket counter
+- Auto-deletion of closed tickets after 5 seconds
+- /ticket setup and /ticket close commands
+
+### 6. Multiple Creation Methods
 - **/create command** - Opens modal form directly
 - **/setup command** - Places a button in a text channel
 - **Voice channel join** - Join a specific channel to auto-create (optional)
 
-### 5. Modular Architecture
+### 7. Modular Architecture
 - Events auto-load from `events/` directory
 - Commands auto-load from `commands/` directory
 - Components auto-load from `components/` directory
 - New features added by dropping in files
 
-### 6. Configuration System
+### 8. Configuration System
 - All settings in `config.json`
 - No code changes needed for customization
 - Configurable colors, delays, limits, IDs
 
-### 7. Error Handling
+### 9. Error Handling
 - Graceful handling of missing config
 - Validation of user input in modals
 - Error messages with embed styling
@@ -150,6 +163,16 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 | features.autoCleanup | Enable/disable auto-delete |
 | features.videoNotifier | Enable/disable video notifier |
 | features.autoModeration | Enable/disable auto-moderation |
+| features.ticketSystem | Enable/disable ticket system |
+
+### Ticket System Settings
+| Setting | Description |
+|---------|-------------|
+| ticketSystem.enabled | Enable/disable ticket system |
+| ticketSystem.ticketCategoryId | Category for ticket channels |
+| ticketSystem.ticketStaffRoles | Array of staff role IDs |
+| ticketSystem.ticketWelcomeMessage | Message for new tickets |
+| ticketSystem.ticketCounter | Current ticket number |
 
 ### Video Notifier Settings
 | Setting | Description |

@@ -13,6 +13,7 @@ A modular, configurable Discord bot with utility functionality built with Discor
 ## ✨ Features
 
 - **🎤 Temporary Voice Channels**: Create custom voice channels that auto-delete when empty
+- **🎫 Ticket System**: Create private support ticket channels with custom titles and descriptions
 - **🛡️ Auto-Moderation**: Automatically protect your server from spam, mass mentions, link spam, and suspicious new accounts
 - **📺 Video Notifier**: Monitor YouTube/TikTok channels and get notifications when new content is posted
 - **🐙 GitHub Integration**: Receive Discord notifications for GitHub events (pushes, pull requests, issues)
@@ -155,6 +156,13 @@ In `config.json`, under `autoModeration`:
 |---------|-------------|
 | `/create` | Open the channel creation modal form |
 | `/setup` | Send the control panel with a creation button to the current channel |
+
+### 🎫 Ticket System Commands
+
+| Command | Description |
+|---------|-------------|
+| `/ticket setup` | Send the ticket creation button to the current channel (Admin Only) |
+| `/ticket close` | Close the current ticket channel |
 
 ### Minecraft Server Commands (Admin Only)
 
@@ -679,6 +687,7 @@ utility-discord-bot/
 │   ├── ping.js
 │   ├── create.js
 │   ├── setup.js
+│   ├── ticket.js
 │   ├── help.js
 │   ├── videonotifier.js
 │   ├── github.js
@@ -687,7 +696,10 @@ utility-discord-bot/
 │   └── auto-reload.js
 ├── components/         # Button and modal handlers
 │   ├── CreateTempChannelButton.js
-│   └── CreateTempChannelModal.js
+│   ├── CreateTempChannelModal.js
+│   ├── TicketButton.js
+│   ├── CloseTicketButton.js
+│   └── TicketModal.js
 ├── events/            # Discord event listeners
 │   ├── ready.js
 │   ├── interactionCreate.js
@@ -697,6 +709,7 @@ utility-discord-bot/
 │   ├── ConfigBackupManager.js
 │   ├── Logger.js
 │   ├── TempChannelManager.js
+│   ├── TicketManager.js
 │   ├── VideoNotifierManager.js
 │   ├── GitHubNotifierManager.js
 │   ├── MinecraftPing.js

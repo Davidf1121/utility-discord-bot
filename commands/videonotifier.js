@@ -164,7 +164,7 @@ async function handleList(interaction, manager) {
   const style = config?.notificationStyle === 'simple' ? 'Simple Text' : 'Rich Embed (Default)';
 
   const embed = {
-    color: manager.config.embedColors.primary,
+    color: manager.config.embedColors.videoNotifier || manager.config.embedColors.primary,
     title: '📺 Video Notifier Status',
     fields: [
       { name: 'Status', value: status, inline: true },

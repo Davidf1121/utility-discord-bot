@@ -8,7 +8,7 @@ export default {
     const config = interaction.client.tempChannelManager.config;
     
     const embed = new EmbedBuilder()
-      .setColor(config.embedColors.primary)
+      .setColor(config.embedColors.tempVoice || config.embedColors.primary)
       .setTitle('🎤 Temporary Voice Channels')
       .setDescription('Click the button below to create your own temporary voice channel!')
       .addFields(

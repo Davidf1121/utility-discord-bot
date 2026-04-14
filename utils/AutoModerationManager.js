@@ -176,7 +176,7 @@ export class AutoModerationManager {
 
       const embed = new EmbedBuilder()
         .setTitle('Auto-Moderation Action')
-        .setColor(this.config.embedColors?.warning || 0xFFAA00)
+        .setColor(this.config.embedColors?.autoModeration || this.config.embedColors?.warning || 0xFFAA00)
         .addFields(
           { name: 'User', value: `${message.author.tag} (${message.author.id})`, inline: true },
           { name: 'Channel', value: `${message.channel}`, inline: true },

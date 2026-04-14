@@ -19,7 +19,9 @@ export default {
           name: '🔧 General Commands', 
           value: [
             '`/ping` - Check bot latency and API response time',
-            '`/help` - Display this help message with all available commands'
+            '`/help` - Display this help message with all available commands',
+            '`/setting list` - Show all current bot settings',
+            '`/setting embed colors` - View or change feature-specific embed colors'
           ].join('\n'), 
           inline: false 
         }

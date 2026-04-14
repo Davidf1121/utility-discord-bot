@@ -28,7 +28,7 @@ export default {
       }
 
       const embed = new EmbedBuilder()
-        .setColor(config.embedColors.primary)
+        .setColor(config.embedColors.ticket || config.embedColors.primary)
         .setTitle('🎫 Support Tickets')
         .setDescription('Need help? Click the button below to open a support ticket!')
         .addFields(

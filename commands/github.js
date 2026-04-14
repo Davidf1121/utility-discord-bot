@@ -123,7 +123,7 @@ async function handleStatus(interaction, manager) {
   const webhookUrl = `/github-webhook (port: ${port})`;
 
   const embed = new EmbedBuilder()
-    .setColor(manager.config.embedColors.primary)
+    .setColor(manager.config.embedColors.github || manager.config.embedColors.primary)
     .setTitle('🐙 GitHub Notifier Status')
     .addFields(
       { name: 'Status', value: status, inline: true },

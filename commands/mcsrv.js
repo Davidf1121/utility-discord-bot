@@ -140,7 +140,7 @@ async function handleList(interaction) {
   }));
 
   const embed = new EmbedBuilder()
-    .setColor(config.embedColors.primary)
+    .setColor(config.embedColors.mcsrv || config.embedColors.primary)
     .setTitle('🎮 Saved Minecraft Servers')
     .setDescription(`Found ${savedServers.length} saved server${savedServers.length > 1 ? 's' : ''}`)
     .addFields(fields)

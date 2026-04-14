@@ -6,6 +6,7 @@ import { createLogger } from './utils/Logger.js';
 import { TempChannelManager } from './utils/TempChannelManager.js';
 import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
 import { GitHubNotifierManager } from './utils/GitHubNotifierManager.js';
+import { AutoModerationManager } from './utils/AutoModerationManager.js';
 import { MinecraftPing } from './utils/MinecraftPing.js';
 import { MinecraftRcon } from './utils/MinecraftRcon.js';
 import path from 'path';
@@ -22,7 +23,8 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildMessages
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
   ]
 });
 
@@ -31,12 +33,14 @@ client.commands = new Collection();
 const tempChannelManager = new TempChannelManager(client, config);
 const videoNotifierManager = new VideoNotifierManager(client, config, configPath);
 const githubNotifierManager = new GitHubNotifierManager(client, config);
+const autoModerationManager = new AutoModerationManager(client, config);
 const minecraftPing = new MinecraftPing(config);
 const minecraftRcon = new MinecraftRcon(config);
 
 client.tempChannelManager = tempChannelManager;
 client.videoNotifierManager = videoNotifierManager;
 client.githubNotifierManager = githubNotifierManager;
+client.autoModerationManager = autoModerationManager;
 client.minecraftPing = minecraftPing;
 client.minecraftRcon = minecraftRcon;
 
@@ -45,6 +49,7 @@ function updateConfigManagers(newConfig) {
   tempChannelManager.config = config;
   videoNotifierManager.config = config;
   githubNotifierManager.config = config;
+  autoModerationManager.config = config;
   minecraftPing.config = config;
   minecraftRcon.config = config;
   logger.info('Updated config references for all managers');

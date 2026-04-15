@@ -121,7 +121,50 @@ export default {
               option
                 .setName('role')
                 .setDescription('The role to add or remove')
-                .setRequired(true)))),
+                .setRequired(true))))
+    .addSubcommandGroup(group =>
+      group
+        .setName('style')
+        .setDescription('Manage message styles')
+        .addSubcommand(subcommand =>
+          subcommand
+            .setName('global')
+            .setDescription('Set global message style')
+            .addStringOption(option =>
+              option
+                .setName('style')
+                .setDescription('The style to use')
+                .setRequired(true)
+                .addChoices(
+                  { name: 'Embed', value: 'embed' },
+                  { name: 'v2 (Layout Components)', value: 'v2' }
+                )))
+        .addSubcommand(subcommand =>
+          subcommand
+            .setName('feature')
+            .setDescription('Set specific feature message style')
+            .addStringOption(option =>
+              option
+                .setName('feature')
+                .setDescription('The feature to set the style for')
+                .setRequired(true)
+                .addChoices(
+                  { name: 'Tickets', value: 'ticketSystem' },
+                  { name: 'Temp Voice', value: 'tempVoiceChannels' },
+                  { name: 'Embed Creator', value: 'embedCreator' },
+                  { name: 'Video Notifier', value: 'videoNotifier' },
+                  { name: 'Auto Moderation', value: 'autoModeration' }
+                ))
+            .addStringOption(option =>
+              option
+                .setName('style')
+                .setDescription('The style to use')
+                .setRequired(true)
+                .addChoices(
+                  { name: 'Inherit Global', value: 'inherit' },
+                  { name: 'Embed', value: 'embed' },
+                  { name: 'v2 (Layout Components)', value: 'v2' }
+                )))),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -141,6 +184,11 @@ export default {
     if (group === 'ticket') {
       if (subcommand === 'category') return handleSetTicketCategory(interaction);
       if (subcommand === 'staff-role') return handleTicketStaffRole(interaction);
+    }
+
+    if (group === 'style') {
+      if (subcommand === 'global') return handleSetGlobalStyle(interaction);
+      if (subcommand === 'feature') return handleSetFeatureStyle(interaction);
     }
 
     if (subcommand === 'list') {
@@ -172,6 +220,16 @@ async function handleListSettings(interaction) {
       { name: 'Enabled Features', value: Object.entries(config.features)
           .map(([name, enabled]) => `${enabled ? '✅' : '❌'} ${name}`)
           .join('\n') }
+    )
+    .addFields(
+      { name: 'Message Styles', value: [
+        `**Global:** ${config.messageStyle || 'embed'}`,
+        `**Tickets:** ${config.ticketSystem.messageStyle || 'inherit'}`,
+        `**Temp Voice:** ${config.tempChannelSettings.messageStyle || 'inherit'}`,
+        `**Embed Creator:** ${config.embedCreator?.messageStyle || 'inherit'}`,
+        `**Video Notifier:** ${config.videoNotifier?.notificationStyle || 'inherit'}`,
+        `**Auto Moderation:** ${config.autoModeration?.logChannelStyle || 'inherit'}`
+      ].join('\n') }
     )
     .setTimestamp();
 
@@ -372,4 +430,43 @@ async function handleEmbedThumbnail(interaction) {
 
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
+}
+
+async function handleSetGlobalStyle(interaction) {
+  const style = interaction.options.getString('style');
+  const config = loadConfig();
+
+  config.messageStyle = style;
+  saveConfig(config);
+
+  await interaction.reply({
+    content: `✅ Global message style has been set to **${style}**.`,
+    ephemeral: true
+  });
+}
+
+async function handleSetFeatureStyle(interaction) {
+  const feature = interaction.options.getString('feature');
+  const style = interaction.options.getString('style');
+  const config = loadConfig();
+
+  if (feature === 'ticketSystem') {
+    config.ticketSystem.messageStyle = style;
+  } else if (feature === 'tempVoiceChannels') {
+    config.tempChannelSettings.messageStyle = style;
+  } else if (feature === 'embedCreator') {
+    if (!config.embedCreator) config.embedCreator = {};
+    config.embedCreator.messageStyle = style;
+  } else if (feature === 'videoNotifier') {
+    config.videoNotifier.notificationStyle = style;
+  } else if (feature === 'autoModeration') {
+    config.autoModeration.logChannelStyle = style;
+  }
+
+  saveConfig(config);
+
+  await interaction.reply({
+    content: `✅ Message style for **${feature}** has been set to **${style}**.`,
+    ephemeral: true
+  });
 }

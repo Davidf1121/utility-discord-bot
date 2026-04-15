@@ -1,5 +1,7 @@
 import { Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createLogger } from './Logger.js';
+import { ComponentBuilder } from './ComponentBuilder.js';
+import { getMessageStyle } from './ConfigLoader.js';
 
 const logger = createLogger('EmbedCreatorManager');
 
@@ -95,6 +97,34 @@ export class EmbedCreatorManager {
     }
 
     return embed;
+  }
+
+  buildMessage(userId, { includeComponents = false } = {}) {
+    const style = getMessageStyle(this.config, 'embedCreator');
+    const state = this.states.get(userId);
+    if (!state) return null;
+
+    let message;
+    if (style === 'v2') {
+      message = ComponentBuilder.buildV2Message({
+        title: state.embed.title || '*(No Title)*',
+        description: state.embed.description || '*(No Description)*',
+        accentColor: this._hexToDecimal(state.embed.color)
+      });
+    } else {
+      message = { embeds: [this.buildEmbed(userId)] };
+    }
+
+    if (includeComponents) {
+      const creatorComponents = this.createComponents();
+      if (message.components) {
+        message.components.push(...creatorComponents);
+      } else {
+        message.components = creatorComponents;
+      }
+    }
+
+    return message;
   }
 
   createComponents() {

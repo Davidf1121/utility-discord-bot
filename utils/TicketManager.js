@@ -31,15 +31,35 @@ export class TicketManager {
     const channelName = `ticket-${ticketNumber.toString().padStart(4, '0')}`;
 
     // Prepare staff roles - convert to strings and validate
-    const validStaffRoles = (ticketConfig.ticketStaffRoles || [])
-      .map(id => String(id))
-      .filter(id => {
-        const hasRole = guild.roles.cache.has(id);
-        if (!hasRole) {
-          this.logger.warn(`Staff role ID ${id} not found in guild ${guild.id}`);
+    this.logger.debug(`Processing staff roles from config: ${JSON.stringify(ticketConfig.ticketStaffRoles)}`);
+    
+    let staffRoles = [];
+    if (Array.isArray(ticketConfig.ticketStaffRoles)) {
+      staffRoles = ticketConfig.ticketStaffRoles;
+    } else if (typeof ticketConfig.ticketStaffRoles === 'string') {
+      staffRoles = ticketConfig.ticketStaffRoles.split(',').map(s => s.trim());
+    }
+
+    const validStaffRoles = [];
+    for (const roleId of staffRoles) {
+      const stringId = String(roleId).trim();
+      if (!stringId) continue;
+      
+      try {
+        // Fetch role to ensure it exists and is accessible
+        const role = await guild.roles.fetch(stringId).catch(() => null);
+        if (role) {
+          validStaffRoles.push(stringId);
+          this.logger.debug(`Validated staff role: ${role.name} (${stringId})`);
+        } else {
+          this.logger.warn(`Staff role ID ${stringId} not found in guild ${guild.id}`);
         }
-        return hasRole;
-      });
+      } catch (err) {
+        this.logger.error(`Error fetching role ${stringId}:`, err);
+      }
+    }
+    
+    this.logger.info(`Ticket creation for ${user.tag} (${user.id}). Valid staff roles: ${validStaffRoles.length ? validStaffRoles.join(', ') : 'None'}`);
 
     const permissionOverwrites = [
       {

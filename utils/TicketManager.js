@@ -17,8 +17,12 @@ export class TicketManager {
       return null;
     }
 
-    const categoryId = ticketConfig.ticketCategoryId;
+    const categoryId = ticketConfig.ticketCategoryId ? String(ticketConfig.ticketCategoryId) : null;
     const category = categoryId ? guild.channels.cache.get(categoryId) : null;
+    
+    if (categoryId && !category) {
+      this.logger.warn(`Ticket category ID ${categoryId} not found in guild ${guild.id}`);
+    }
 
     const ticketNumber = (ticketConfig.ticketCounter || 0) + 1;
     ticketConfig.ticketCounter = ticketNumber;
@@ -43,9 +47,18 @@ export class TicketManager {
       },
     ];
 
-    if (ticketConfig.ticketStaffRoles && ticketConfig.ticketStaffRoles.length > 0) {
-      ticketConfig.ticketStaffRoles.forEach(roleId => {
-        if (!roleId) return;
+    if (ticketConfig.ticketStaffRoles && Array.isArray(ticketConfig.ticketStaffRoles)) {
+      for (const rawRoleId of ticketConfig.ticketStaffRoles) {
+        if (!rawRoleId) continue;
+        
+        const roleId = String(rawRoleId);
+        const role = guild.roles.cache.get(roleId);
+        
+        if (!role) {
+          this.logger.warn(`Role ID ${roleId} not found in guild ${guild.id}, skipping permission overwrite`);
+          continue;
+        }
+
         permissionOverwrites.push({
           id: roleId,
           allow: [
@@ -57,7 +70,7 @@ export class TicketManager {
             PermissionsBitField.Flags.ManageMessages,
           ],
         });
-      });
+      }
     }
 
     try {
@@ -74,8 +87,12 @@ export class TicketManager {
         title,
       });
 
-      const staffMentions = ticketConfig.ticketStaffRoles && ticketConfig.ticketStaffRoles.length > 0
-        ? ticketConfig.ticketStaffRoles.map(roleId => `<@&${roleId}>`).join(' ')
+      const validStaffRoles = (ticketConfig.ticketStaffRoles || [])
+        .map(id => String(id))
+        .filter(id => guild.roles.cache.has(id));
+
+      const staffMentions = validStaffRoles.length > 0
+        ? validStaffRoles.map(roleId => `<@&${roleId}>`).join(' ')
         : '';
 
       const welcomeEmbed = new EmbedBuilder()

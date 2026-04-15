@@ -40,7 +40,7 @@
     "ticketStaffRoles": [],
     "ticketWelcomeMessage": "Welcome to your ticket, {user}! Staff will be with you shortly.",
     "ticketCounter": 0,
-    "pingStaffOnCreate": false
+    "pingStaffOnCreate": true
   },
   "autoModeration": {
     "enabled": true,

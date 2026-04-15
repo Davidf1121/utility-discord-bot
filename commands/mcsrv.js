@@ -189,11 +189,10 @@ async function handleAdd(interaction) {
 
     savedServers.push(newServer);
 
-    const { loadConfig } = await import('../utils/ConfigLoader.js');
-    const { writeFileSync } = await import('fs');
+    const { loadConfig, saveConfig } = await import('../utils/ConfigLoader.js');
     const newConfig = loadConfig();
     newConfig.mcsrv.savedServers = savedServers;
-    writeFileSync('./config.json', JSON.stringify(newConfig, null, 2));
+    saveConfig(newConfig);
 
     await interaction.editReply({
       content: `✅ Server saved successfully!\n\n**Address:** ${address}\n**Name:** ${newServer.name}\n**Type:** ${result.type === 'java' ? '☕ Java' : '📱 Bedrock'}\n**Players:** ${result.players.online}/${result.players.max}`
@@ -222,11 +221,10 @@ async function handleRemove(interaction) {
 
   const removed = savedServers.splice(index, 1)[0];
 
-  const { loadConfig } = await import('../utils/ConfigLoader.js');
-  const { writeFileSync } = await import('fs');
+  const { loadConfig, saveConfig } = await import('../utils/ConfigLoader.js');
   const newConfig = loadConfig();
   newConfig.mcsrv.savedServers = savedServers;
-  writeFileSync('./config.json', JSON.stringify(newConfig, null, 2));
+  saveConfig(newConfig);
 
   await interaction.reply({
     content: `✅ Removed server: ${removed.name || removed.address}`,

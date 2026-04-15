@@ -66,22 +66,81 @@ export default {
         .addSubcommand(subcommand =>
           subcommand
             .setName('reset')
-            .setDescription('Reset embed settings to defaults'))),
+            .setDescription('Reset embed settings to defaults')))
+    .addSubcommandGroup(group =>
+      group
+        .setName('bot')
+        .setDescription('Manage core bot settings')
+        .addSubcommand(subcommand =>
+          subcommand
+            .setName('ids')
+            .setDescription('Set core Discord IDs')
+            .addStringOption(option =>
+              option
+                .setName('type')
+                .setDescription('The type of ID to set')
+                .setRequired(true)
+                .addChoices(
+                  { name: 'Client ID', value: 'clientId' },
+                  { name: 'Guild ID', value: 'guildId' },
+                  { name: 'Control Channel ID', value: 'controlChannelId' },
+                  { name: 'Voice Category ID', value: 'voiceCategoryId' }
+                ))
+            .addStringOption(option =>
+              option
+                .setName('id')
+                .setDescription('The Discord ID (will be stored as string)')
+                .setRequired(true))))
+    .addSubcommandGroup(group =>
+      group
+        .setName('ticket')
+        .setDescription('Manage ticket system settings')
+        .addSubcommand(subcommand =>
+          subcommand
+            .setName('category')
+            .setDescription('Set the category for ticket channels')
+            .addChannelOption(option =>
+              option
+                .setName('category')
+                .setDescription('The category channel')
+                .setRequired(true)))
+        .addSubcommand(subcommand =>
+          subcommand
+            .setName('staff-role')
+            .setDescription('Add or remove a staff role')
+            .addStringOption(option =>
+              option
+                .setName('action')
+                .setDescription('Add or remove')
+                .setRequired(true)
+                .addChoices(
+                  { name: 'Add', value: 'add' },
+                  { name: 'Remove', value: 'remove' }
+                ))
+            .addRoleOption(option =>
+              option
+                .setName('role')
+                .setDescription('The role to add or remove')
+                .setRequired(true)))),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const group = interaction.options.getSubcommandGroup();
 
     if (group === 'embed') {
-      if (subcommand === 'colors') {
-        return handleEmbedColors(interaction);
-      } else if (subcommand === 'color') {
-        return handleSetEmbedColor(interaction);
-      } else if (subcommand === 'thumbnail') {
-        return handleEmbedThumbnail(interaction);
-      } else if (subcommand === 'reset') {
-        return handleResetEmbedColors(interaction);
-      }
+      if (subcommand === 'colors') return handleEmbedColors(interaction);
+      if (subcommand === 'color') return handleSetEmbedColor(interaction);
+      if (subcommand === 'thumbnail') return handleEmbedThumbnail(interaction);
+      if (subcommand === 'reset') return handleResetEmbedColors(interaction);
+    }
+
+    if (group === 'bot') {
+      if (subcommand === 'ids') return handleSetBotIds(interaction);
+    }
+
+    if (group === 'ticket') {
+      if (subcommand === 'category') return handleSetTicketCategory(interaction);
+      if (subcommand === 'staff-role') return handleTicketStaffRole(interaction);
     }
 
     if (subcommand === 'list') {
@@ -104,6 +163,12 @@ async function handleListSettings(interaction) {
       { name: 'Guild ID', value: config.guildId || 'Not set', inline: true }
     )
     .addFields(
+      { name: 'Ticket Settings', value: [
+        `**Category:** ${config.ticketSystem.ticketCategoryId || 'Not set'}`,
+        `**Staff Roles:** ${config.ticketSystem.ticketStaffRoles?.length ? config.ticketSystem.ticketStaffRoles.map(id => `<@&${id}>`).join(', ') : 'None'}`
+      ].join('\n') }
+    )
+    .addFields(
       { name: 'Enabled Features', value: Object.entries(config.features)
           .map(([name, enabled]) => `${enabled ? '✅' : '❌'} ${name}`)
           .join('\n') }
@@ -111,6 +176,66 @@ async function handleListSettings(interaction) {
     .setTimestamp();
 
   await interaction.reply({ embeds: [embed], ephemeral: true });
+}
+
+async function handleSetBotIds(interaction) {
+  const type = interaction.options.getString('type');
+  const id = interaction.options.getString('id');
+  const config = loadConfig();
+
+  // Ensure it's stored as a string (getString already returns a string, but just to be safe)
+  config[type] = String(id).trim();
+  saveConfig(config);
+
+  await interaction.reply({
+    content: `✅ **${type}** has been set to \`${config[type]}\`.`,
+    ephemeral: true
+  });
+}
+
+async function handleSetTicketCategory(interaction) {
+  const category = interaction.options.getChannel('category');
+  const config = loadConfig();
+
+  config.ticketSystem.ticketCategoryId = String(category.id);
+  saveConfig(config);
+
+  await interaction.reply({
+    content: `✅ Ticket category has been set to **${category.name}** (\`${category.id}\`).`,
+    ephemeral: true
+  });
+}
+
+async function handleTicketStaffRole(interaction) {
+  const action = interaction.options.getString('action');
+  const role = interaction.options.getRole('role');
+  const config = loadConfig();
+
+  if (!config.ticketSystem.ticketStaffRoles) {
+    config.ticketSystem.ticketStaffRoles = [];
+  }
+
+  const roleId = String(role.id);
+
+  if (action === 'add') {
+    if (config.ticketSystem.ticketStaffRoles.includes(roleId)) {
+      return interaction.reply({ content: '❌ This role is already a staff role.', ephemeral: true });
+    }
+    config.ticketSystem.ticketStaffRoles.push(roleId);
+  } else {
+    const index = config.ticketSystem.ticketStaffRoles.indexOf(roleId);
+    if (index === -1) {
+      return interaction.reply({ content: '❌ This role is not a staff role.', ephemeral: true });
+    }
+    config.ticketSystem.ticketStaffRoles.splice(index, 1);
+  }
+
+  saveConfig(config);
+
+  await interaction.reply({
+    content: `✅ Role **${role.name}** has been ${action === 'add' ? 'added to' : 'removed from'} ticket staff roles.`,
+    ephemeral: true
+  });
 }
 
 async function handleEmbedColors(interaction) {

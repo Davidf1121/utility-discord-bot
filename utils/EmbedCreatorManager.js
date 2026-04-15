@@ -54,19 +54,35 @@ export class EmbedCreatorManager {
     this.states.delete(userId);
   }
 
+  /**
+   * Helper to convert hex color string to decimal number
+   * @param {string|number} hex 
+   * @returns {number}
+   */
+  _hexToDecimal(hex) {
+    if (typeof hex === 'number') return hex;
+    if (!hex || typeof hex !== 'string') return 0;
+    return parseInt(hex.replace('#', ''), 16);
+  }
+
   buildEmbed(userId) {
     const state = this.states.get(userId);
     if (!state) return null;
 
     const embedData = state.embed;
     const embed = new EmbedBuilder()
-      .setColor(embedData.color);
+      .setColor(this._hexToDecimal(embedData.color));
 
     if (embedData.title) embed.setTitle(embedData.title);
     if (embedData.description) embed.setDescription(embedData.description);
     if (embedData.footer?.text) embed.setFooter({ text: embedData.footer.text });
-    if (embedData.image?.url) embed.setImage(embedData.image.url);
-    if (embedData.thumbnail?.url) embed.setThumbnail(embedData.thumbnail.url);
+    
+    // Check for non-empty URL strings
+    const hasImage = embedData.image?.url && embedData.image.url.trim().length > 0;
+    const hasThumbnail = embedData.thumbnail?.url && embedData.thumbnail.url.trim().length > 0;
+
+    if (hasImage) embed.setImage(embedData.image.url);
+    if (hasThumbnail) embed.setThumbnail(embedData.thumbnail.url);
     if (embedData.timestamp) embed.setTimestamp();
     
     if (embedData.fields && embedData.fields.length > 0) {
@@ -74,7 +90,7 @@ export class EmbedCreatorManager {
     }
 
     // If embed is empty, add a placeholder
-    if (!embedData.title && !embedData.description && (!embedData.fields || embedData.fields.length === 0) && !embedData.image?.url && !embedData.thumbnail?.url) {
+    if (!embedData.title && !embedData.description && (!embedData.fields || embedData.fields.length === 0) && !hasImage && !hasThumbnail) {
       embed.setDescription('*(Embed is currently empty)*');
     }
 

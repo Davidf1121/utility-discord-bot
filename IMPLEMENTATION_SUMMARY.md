@@ -173,6 +173,7 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 | ticketSystem.ticketStaffRoles | Array of staff role IDs |
 | ticketSystem.ticketWelcomeMessage | Message for new tickets |
 | ticketSystem.ticketCounter | Current ticket number |
+| ticketSystem.pingStaffOnCreate | Mention staff roles on ticket creation |
 
 ### Video Notifier Settings
 | Setting | Description |

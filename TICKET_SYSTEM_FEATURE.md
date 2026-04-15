@@ -34,6 +34,7 @@ Add or update the `ticketSystem` section in your `config.json`:
 | `ticketStaffRoles` | An array of Role IDs that should have access to support tickets. |
 | `ticketWelcomeMessage` | The message sent at the top of a new ticket. Use `{user}` for a mention. |
 | `ticketCounter` | The current ticket number (automatically updated). |
+| `pingStaffOnCreate` | Whether to mention staff roles in the channel when a ticket is created. |
 
 ### 2. Deploy the Creation Button
 

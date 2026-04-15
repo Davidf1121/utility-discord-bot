@@ -23,13 +23,28 @@ export class ConfigBackupManager {
       'config-backup.json',
       'config(old).json',
       'config(old2).json',
+      'config.new.json',
+      'config.new',
+      'config.old2.json',
+      'config.old2',
+      'config.latest.json',
+      'config.prev.json',
       'config.save',
       'config.bak'
     ];
   }
 
   isEmpty(value) {
-    return value === '' || value === null || value === undefined;
+    if (value === '' || value === null || value === undefined) {
+      return true;
+    }
+    if (Array.isArray(value)) {
+      return value.length === 0;
+    }
+    if (typeof value === 'object') {
+      return Object.keys(value).length === 0;
+    }
+    return false;
   }
 
   getBackupPatterns() {
@@ -101,27 +116,31 @@ export class ConfigBackupManager {
   findMissingKeys(currentConfig, backupConfig, path = '') {
     const missing = [];
     
-    for (const key of Object.keys(backupConfig)) {
+    if (!backupConfig || typeof backupConfig !== 'object') {
+      return missing;
+    }
+
+    const keys = Object.keys(backupConfig);
+    
+    for (const key of keys) {
       const currentPath = path ? `${path}.${key}` : key;
       const backupValue = backupConfig[key];
-      const currentValue = currentConfig[key];
+      const currentValue = currentConfig ? currentConfig[key] : undefined;
       
-      const isMissing = !(key in currentConfig);
+      const isMissing = currentConfig === null || currentConfig === undefined || !(key in currentConfig);
       const isCurrentEmpty = this.isEmpty(currentValue);
       const isBackupNotEmpty = !this.isEmpty(backupValue);
 
       if (isMissing || (isCurrentEmpty && isBackupNotEmpty)) {
-        if (typeof backupValue !== 'object' || backupValue === null || Array.isArray(backupValue)) {
+        if (typeof backupValue !== 'object' || backupValue === null || Array.isArray(backupValue) || isMissing) {
           missing.push({
             path: currentPath,
             value: backupValue
           });
-        } else if (isMissing || typeof currentValue !== 'object' || currentValue === null) {
-          missing.push({
-            path: currentPath,
-            value: backupValue
-          });
-          continue;
+          
+          if (isMissing || (isCurrentEmpty && isBackupNotEmpty)) {
+            continue;
+          }
         }
       }
       
@@ -129,8 +148,7 @@ export class ConfigBackupManager {
         typeof backupValue === 'object' &&
         backupValue !== null &&
         !Array.isArray(backupValue) &&
-        typeof currentValue === 'object' &&
-        currentValue !== null
+        (isMissing || (typeof currentValue === 'object' && currentValue !== null))
       ) {
         const nestedMissing = this.findMissingKeys(
           currentValue,
@@ -138,6 +156,21 @@ export class ConfigBackupManager {
           currentPath
         );
         missing.push(...nestedMissing);
+      } else if (
+        Array.isArray(backupValue) &&
+        Array.isArray(currentValue) &&
+        backupValue.length === currentValue.length
+      ) {
+        for (let i = 0; i < backupValue.length; i++) {
+          if (typeof backupValue[i] === 'object' && backupValue[i] !== null) {
+            const nestedMissing = this.findMissingKeys(
+              currentValue[i],
+              backupValue[i],
+              `${currentPath}.${i}`
+            );
+            missing.push(...nestedMissing);
+          }
+        }
       }
     }
     
@@ -188,9 +221,11 @@ export class ConfigBackupManager {
       const missingKeys = this.findMissingKeys(upgradedConfig, backupConfig);
 
       if (missingKeys.length === 0) {
-        this.logger.debug(`No missing keys found in ${backupFile}`);
+        this.logger.info(`No migratable values found in ${backupFile}`);
         continue;
       }
+
+      this.logger.info(`Found ${missingKeys.length} value(s) to migrate from ${backupFile}`);
 
       for (const { path, value } of missingKeys) {
         const existingValue = this.getNestedValue(upgradedConfig, path);
@@ -206,7 +241,7 @@ export class ConfigBackupManager {
             source: backupFile
           });
           const action = isMissing ? 'Migrated' : 'Updated empty value';
-          this.logger.info(`${action}: ${path} = ${this.formatValue(value)} (from ${backupFile})`);
+          this.logger.info(`  [+] ${action}: ${path} = ${this.formatValue(value)}`);
         }
       }
     }
@@ -238,11 +273,15 @@ export class ConfigBackupManager {
       const str = value.length > 50 ? value.substring(0, 50) + '...' : value;
       return `"${str}"`;
     }
-    if (typeof value === 'object') {
-      if (Array.isArray(value)) {
-        return `[${value.length} items]`;
+    if (Array.isArray(value)) {
+      return `[${value.length} items]`;
+    }
+    if (typeof value === 'object' && value !== null) {
+      const keys = Object.keys(value);
+      if (keys.length <= 3 && keys.length > 0) {
+        return `{ ${keys.join(', ')} }`;
       }
-      return '{...}';
+      return keys.length === 0 ? '{}' : `{ ${keys.length} keys }`;
     }
     return String(value);
   }

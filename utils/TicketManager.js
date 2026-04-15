@@ -30,6 +30,17 @@ export class TicketManager {
 
     const channelName = `ticket-${ticketNumber.toString().padStart(4, '0')}`;
 
+    // Prepare staff roles - convert to strings and validate
+    const validStaffRoles = (ticketConfig.ticketStaffRoles || [])
+      .map(id => String(id))
+      .filter(id => {
+        const hasRole = guild.roles.cache.has(id);
+        if (!hasRole) {
+          this.logger.warn(`Staff role ID ${id} not found in guild ${guild.id}`);
+        }
+        return hasRole;
+      });
+
     const permissionOverwrites = [
       {
         id: guild.id,
@@ -47,30 +58,19 @@ export class TicketManager {
       },
     ];
 
-    if (ticketConfig.ticketStaffRoles && Array.isArray(ticketConfig.ticketStaffRoles)) {
-      for (const rawRoleId of ticketConfig.ticketStaffRoles) {
-        if (!rawRoleId) continue;
-        
-        const roleId = String(rawRoleId);
-        const role = guild.roles.cache.get(roleId);
-        
-        if (!role) {
-          this.logger.warn(`Role ID ${roleId} not found in guild ${guild.id}, skipping permission overwrite`);
-          continue;
-        }
-
-        permissionOverwrites.push({
-          id: roleId,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages,
-            PermissionsBitField.Flags.ReadMessageHistory,
-            PermissionsBitField.Flags.AttachFiles,
-            PermissionsBitField.Flags.EmbedLinks,
-            PermissionsBitField.Flags.ManageMessages,
-          ],
-        });
-      }
+    // Add staff role permissions
+    for (const roleId of validStaffRoles) {
+      permissionOverwrites.push({
+        id: roleId,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.ReadMessageHistory,
+          PermissionsBitField.Flags.AttachFiles,
+          PermissionsBitField.Flags.EmbedLinks,
+          PermissionsBitField.Flags.ManageMessages,
+        ],
+      });
     }
 
     try {
@@ -86,10 +86,6 @@ export class TicketManager {
         createdAt: Date.now(),
         title,
       });
-
-      const validStaffRoles = (ticketConfig.ticketStaffRoles || [])
-        .map(id => String(id))
-        .filter(id => guild.roles.cache.has(id));
 
       const staffMentions = validStaffRoles.length > 0
         ? validStaffRoles.map(roleId => `<@&${roleId}>`).join(' ')
@@ -119,7 +115,9 @@ export class TicketManager {
           .setEmoji('🔒')
       );
 
-      const content = ticketConfig.pingStaffOnCreate && staffMentions
+      // Ensure pingStaffOnCreate is properly read as a boolean
+      const shouldPingStaff = ticketConfig.pingStaffOnCreate === true || ticketConfig.pingStaffOnCreate === 'true';
+      const content = shouldPingStaff && staffMentions
         ? `<@${user.id}> | ${staffMentions}`
         : `<@${user.id}> | Staff`;
 

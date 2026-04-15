@@ -34,9 +34,17 @@ export default {
         if (config.controlChannelId) {
           const controlChannel = interaction.client.channels.cache.get(config.controlChannelId);
           if (controlChannel && controlChannel.isTextBased()) {
-            await controlChannel.send({
-              content: `<@${interaction.user.id}> opened a new ticket: <#${channel.id}>`
-            }).catch(err => logger.debug('Could not send to control channel:', err));
+            const logEmbed = new EmbedBuilder()
+              .setTitle('🎫 Ticket Opened')
+              .setColor(config.embedColors.success)
+              .addFields(
+                { name: 'User', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                { name: 'Channel', value: `<#${channel.id}>`, inline: true },
+                { name: 'Title', value: title }
+              )
+              .setTimestamp();
+
+            await controlChannel.send({ embeds: [logEmbed] }).catch(err => logger.debug('Could not send to control channel:', err));
           }
         }
       } else {

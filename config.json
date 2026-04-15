@@ -39,11 +39,13 @@
     "ticketCategoryId": "",
     "ticketStaffRoles": [],
     "ticketWelcomeMessage": "Welcome to your ticket, {user}! Staff will be with you shortly.",
-    "ticketCounter": 0
+    "ticketCounter": 0,
+    "pingStaffOnCreate": false
   },
   "autoModeration": {
     "enabled": true,
     "logChannelId": "",
+    "logChannelStyle": "embed",
     "triggers": {
       "massMention": {
         "enabled": true,

@@ -4,8 +4,10 @@
   "guildId": "",
   "controlChannelId": "",
   "voiceCategoryId": "",
+  "messageStyle": "embed",
   "defaultEmbedThumbnail": null,
   "tempChannelSettings": {
+    "messageStyle": "inherit",
     "deleteDelay": 5000,
     "defaultUserLimit": 10,
     "bitrate": 64000,
@@ -37,6 +39,7 @@
   },
   "ticketSystem": {
     "enabled": true,
+    "messageStyle": "inherit",
     "ticketCategoryId": "",
     "ticketStaffRoles": [],
     "ticketWelcomeMessage": "Welcome to your ticket, {user}! Staff will be with you shortly.",
@@ -157,5 +160,8 @@
       "config_old.json",
       "config-backup.json"
     ]
+  },
+  "embedCreator": {
+    "messageStyle": "inherit"
   }
 }

@@ -1,7 +1,8 @@
 import { createLogger } from './Logger.js';
 import { EmbedBuilder } from 'discord.js';
 import Parser from 'rss-parser';
-import { saveConfig, getDefaultThumbnail } from './ConfigLoader.js';
+import { saveConfig, getDefaultThumbnail, getMessageStyle } from './ConfigLoader.js';
+import { ComponentBuilder } from './ComponentBuilder.js';
 
 export class VideoNotifierManager {
   constructor(client, config, configPath = null) {
@@ -149,10 +150,13 @@ export class VideoNotifierManager {
       return;
     }
 
-    const style = this.config.videoNotifier.notificationStyle || 'embed';
+    const style = getMessageStyle(this.config, 'videoNotifier');
     
     try {
-      if (style === 'simple') {
+      if (style === 'v2') {
+        const v2Message = this.createV2Message(video, platform, channelLabel);
+        await channel.send(v2Message);
+      } else if (style === 'simple') {
         const message = this.createSimpleMessage(video, platform, channelLabel);
         await channel.send({ content: message });
       } else {
@@ -168,6 +172,37 @@ export class VideoNotifierManager {
   createSimpleMessage(video, platform, channelLabel) {
     const icon = platform === 'youtube' ? '📺' : '🎬';
     return `${icon} **New Video from ${channelLabel}!**\n\n${video.title}\n${video.link}`;
+  }
+
+  createV2Message(video, platform, channelLabel) {
+    const icon = platform === 'youtube' ? '📺' : '🎬';
+    const accentColor = platform === 'youtube' 
+      ? (this.config.embedColors.videoNotifier || this.config.embedColors.primary)
+      : 0x000000;
+
+    const includeDescription = this.config.videoNotifier.embedSettings?.includeDescription ?? true;
+    const descriptionLength = this.config.videoNotifier.embedSettings?.descriptionLength ?? 200;
+    
+    let description = '';
+    if (includeDescription && video.contentSnippet) {
+      description = video.contentSnippet.substring(0, descriptionLength);
+      if (video.contentSnippet.length > descriptionLength) description += '...';
+    }
+
+    const components = [
+      ComponentBuilder.createButton({
+        label: 'Watch Video',
+        style: 5, // Link style
+        url: video.link
+      })
+    ];
+
+    return ComponentBuilder.buildV2Message({
+      title: `${icon} New Video from ${channelLabel}`,
+      description: `**${video.title}**\n\n${description}`,
+      components,
+      accentColor
+    });
   }
 
   createEmbed(video, platform, channelLabel) {
@@ -601,8 +636,11 @@ export class VideoNotifierManager {
       throw new Error(`Notification channel not found: ${targetChannelId}`);
     }
 
-    const style = this.config.videoNotifier.notificationStyle || 'embed';
-    if (style === 'simple') {
+    const style = getMessageStyle(this.config, 'videoNotifier');
+    if (style === 'v2') {
+      const v2Message = this.createV2Message(testVideo, 'youtube', 'Test Channel');
+      await channel.send({ content: '🔔 **Test YouTube Notification**', ...v2Message });
+    } else if (style === 'simple') {
       const message = this.createSimpleMessage(testVideo, 'youtube', 'Test Channel');
       await channel.send({ content: `🔔 **Test YouTube Notification**\n\n${message}` });
     } else {
@@ -631,8 +669,11 @@ export class VideoNotifierManager {
       throw new Error(`Notification channel not found: ${targetChannelId}`);
     }
 
-    const style = this.config.videoNotifier.notificationStyle || 'embed';
-    if (style === 'simple') {
+    const style = getMessageStyle(this.config, 'videoNotifier');
+    if (style === 'v2') {
+      const v2Message = this.createV2Message(testVideo, 'tiktok', 'Test User');
+      await channel.send({ content: '🔔 **Test TikTok Notification**', ...v2Message });
+    } else if (style === 'simple') {
       const message = this.createSimpleMessage(testVideo, 'tiktok', 'Test User');
       await channel.send({ content: `🔔 **Test TikTok Notification**\n\n${message}` });
     } else {

@@ -4,15 +4,13 @@ const logger = createLogger('EmbedCreatorModal');
 
 async function updatePreview(interaction) {
   const userId = interaction.user.id;
-  const embed = interaction.client.embedCreatorManager.buildEmbed(userId);
-  const components = interaction.client.embedCreatorManager.createComponents();
+  const message = interaction.client.embedCreatorManager.buildMessage(userId, { includeComponents: true });
   const state = interaction.client.embedCreatorManager.getOrCreateState(userId);
   const targetChannel = interaction.client.channels.cache.get(state.targetChannelId);
 
   await interaction.update({
-    content: `### Embed Creator\nYou are creating an embed for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your embed.`,
-    embeds: [embed],
-    components: components
+    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.`,
+    ...message
   });
 }
 

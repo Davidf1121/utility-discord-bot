@@ -1,6 +1,7 @@
 import { createLogger } from './Logger.js';
 import { PermissionsBitField, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } from 'discord.js';
-import { saveConfig, getDefaultThumbnail } from './ConfigLoader.js';
+import { saveConfig, getDefaultThumbnail, getMessageStyle } from './ConfigLoader.js';
+import { ComponentBuilder } from './ComponentBuilder.js';
 
 export class TicketManager {
   constructor(client, config) {
@@ -141,11 +142,59 @@ export class TicketManager {
         ? `<@${user.id}> | ${staffMentions}`
         : `<@${user.id}> | Staff`;
 
-      await channel.send({
-        content,
-        embeds: [welcomeEmbed],
-        components: [closeButton],
-      });
+      const style = getMessageStyle(this.config, 'ticketSystem');
+
+      if (style === 'v2') {
+        const v2Message = ComponentBuilder.buildV2Message({
+          title: `Ticket: ${title}`,
+          description: ticketConfig.ticketWelcomeMessage.replace('{user}', `<@${user.id}>`) + 
+                      `\n\n**Description**\n${description || 'No description provided'}` +
+                      (staffMentions ? `\n\n**Staff Notified**\n${staffMentions}` : '') +
+                      `\n\n**Ticket ID**: ${ticketNumber.toString().padStart(4, '0')}`,
+          content,
+          components: [
+            ComponentBuilder.createButton({
+              customId: 'close_ticket',
+              label: 'Close Ticket',
+              style: ButtonStyle.Danger,
+              emoji: { name: '🔒' }
+            })
+          ],
+          accentColor: this.config.embedColors.ticket || this.config.embedColors.primary
+        });
+
+        await channel.send(v2Message);
+      } else {
+        const welcomeEmbed = new EmbedBuilder()
+          .setTitle(`Ticket: ${title}`)
+          .setThumbnail(getDefaultThumbnail(this.config, this.client))
+          .setDescription(ticketConfig.ticketWelcomeMessage.replace('{user}', `<@${user.id}>`))
+          .addFields(
+            { name: 'Description', value: description || 'No description provided' },
+            { name: 'Opened by', value: `<@${user.id}>`, inline: true },
+            { name: 'Ticket ID', value: ticketNumber.toString().padStart(4, '0'), inline: true }
+          )
+          .setColor(this.config.embedColors.ticket || this.config.embedColors.primary)
+          .setTimestamp();
+
+        if (staffMentions) {
+          welcomeEmbed.addFields({ name: 'Staff Notified', value: staffMentions });
+        }
+
+        const closeButton = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('close_ticket')
+            .setLabel('Close Ticket')
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji('🔒')
+        );
+
+        await channel.send({
+          content,
+          embeds: [welcomeEmbed],
+          components: [closeButton],
+        });
+      }
 
       this.logger.info(`Created ticket channel ${channel.id} for user ${user.id}`);
       return channel;
@@ -159,14 +208,25 @@ export class TicketManager {
     if (!channel) return;
 
     try {
-      const closingEmbed = new EmbedBuilder()
-        .setTitle('Ticket Closed')
-        .setThumbnail(getDefaultThumbnail(this.config, this.client))
-        .setDescription(`This ticket has been closed by <@${closedBy.id}>.`)
-        .setColor(this.config.embedColors.warning)
-        .setTimestamp();
+      const style = getMessageStyle(this.config, 'ticketSystem');
+      
+      if (style === 'v2') {
+        const v2Message = ComponentBuilder.buildV2Message({
+          title: 'Ticket Closed',
+          description: `This ticket has been closed by <@${closedBy.id}>.`,
+          accentColor: this.config.embedColors.warning
+        });
+        await channel.send(v2Message);
+      } else {
+        const closingEmbed = new EmbedBuilder()
+          .setTitle('Ticket Closed')
+          .setThumbnail(getDefaultThumbnail(this.config, this.client))
+          .setDescription(`This ticket has been closed by <@${closedBy.id}>.`)
+          .setColor(this.config.embedColors.warning)
+          .setTimestamp();
 
-      await channel.send({ embeds: [closingEmbed] });
+        await channel.send({ embeds: [closingEmbed] });
+      }
       
       // Log to control channel
       if (this.config.controlChannelId) {

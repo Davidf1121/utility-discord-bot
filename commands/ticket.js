@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } from 'discord.js';
-import { getDefaultThumbnail } from '../utils/ConfigLoader.js';
+import { getDefaultThumbnail, getMessageStyle } from '../utils/ConfigLoader.js';
+import { ComponentBuilder } from '../utils/ComponentBuilder.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -28,29 +29,49 @@ export default {
         });
       }
 
-      const embed = new EmbedBuilder()
-        .setColor(config.embedColors.ticket || config.embedColors.primary)
-        .setTitle('🎫 Support Tickets')
-        .setThumbnail(getDefaultThumbnail(config, interaction.client))
-        .setDescription('Need help? Click the button below to open a support ticket!')
-        .addFields(
-          { name: 'Before Opening', value: 'Please ensure you have read the rules and FAQ before opening a ticket.', inline: false },
-          { name: 'Staff Response', value: 'Our staff will be with you as soon as possible. Please be patient.', inline: false }
-        )
-        .setFooter({ text: 'Ticket System' })
-        .setTimestamp();
-
-      const button = new ButtonBuilder()
-        .setCustomId('create_ticket')
-        .setLabel('🎫 Open Ticket')
-        .setStyle(ButtonStyle.Primary);
-
-      const row = new ActionRowBuilder().addComponents(button);
-
-      await interaction.reply({
-        embeds: [embed],
-        components: [row]
+      const style = getMessageStyle(config, 'ticketSystem');
+      
+      const button = ComponentBuilder.createButton({
+        customId: 'create_ticket',
+        label: '🎫 Open Ticket',
+        style: ButtonStyle.Primary
       });
+
+      if (style === 'v2') {
+        const v2Message = ComponentBuilder.buildV2Message({
+          title: '🎫 Support Tickets',
+          description: 'Need help? Click the button below to open a support ticket!\n\n' +
+                      '**Before Opening**\n' +
+                      'Please ensure you have read the rules and FAQ before opening a ticket.\n\n' +
+                      '**Staff Response**\n' +
+                      'Our staff will be with you as soon as possible. Please be patient.',
+          components: [button],
+          accentColor: config.embedColors.ticket || config.embedColors.primary
+        });
+
+        await interaction.reply(v2Message);
+      } else {
+        const embed = new EmbedBuilder()
+          .setColor(config.embedColors.ticket || config.embedColors.primary)
+          .setTitle('🎫 Support Tickets')
+          .setThumbnail(getDefaultThumbnail(config, interaction.client))
+          .setDescription('Need help? Click the button below to open a support ticket!')
+          .addFields(
+            { name: 'Before Opening', value: 'Please ensure you have read the rules and FAQ before opening a ticket.', inline: false },
+            { name: 'Staff Response', value: 'Our staff will be with you as soon as possible. Please be patient.', inline: false }
+          )
+          .setFooter({ text: 'Ticket System' })
+          .setTimestamp();
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder(button)
+        );
+
+        await interaction.reply({
+          embeds: [embed],
+          components: [row]
+        });
+      }
     } else if (subcommand === 'close') {
       const isTicket = interaction.client.ticketManager.isTicketChannel(interaction.channel.id);
       const isTicketName = interaction.channel.name.startsWith('ticket-');

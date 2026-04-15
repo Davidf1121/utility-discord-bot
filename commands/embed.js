@@ -22,13 +22,11 @@ export default {
       // Check if user has DMs enabled
       try {
         const state = interaction.client.embedCreatorManager.getOrCreateState(user.id, targetChannel.id);
-        const embed = interaction.client.embedCreatorManager.buildEmbed(user.id);
-        const components = interaction.client.embedCreatorManager.createComponents();
+        const message = interaction.client.embedCreatorManager.buildMessage(user.id, { includeComponents: true });
 
         const dmMessage = await user.send({
-          content: `### Embed Creator\nYou are creating an embed for ${targetChannel}.\nUse the buttons below to customize your embed.`,
-          embeds: [embed],
-          components: components
+          content: `### Embed Creator\nYou are creating a message for ${targetChannel}.\nUse the buttons below to customize your message.`,
+          ...message
         });
 
         state.previewMessageId = dmMessage.id;

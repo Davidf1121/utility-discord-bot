@@ -5,15 +5,13 @@ const logger = createLogger('EmbedCreatorButtons');
 
 async function updatePreview(interaction) {
   const userId = interaction.user.id;
-  const embed = interaction.client.embedCreatorManager.buildEmbed(userId);
-  const components = interaction.client.embedCreatorManager.createComponents();
+  const message = interaction.client.embedCreatorManager.buildMessage(userId, { includeComponents: true });
   const state = interaction.client.embedCreatorManager.getOrCreateState(userId);
   const targetChannel = interaction.client.channels.cache.get(state.targetChannelId);
 
   await interaction.update({
-    content: `### Embed Creator\nYou are creating an embed for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your embed.`,
-    embeds: [embed],
-    components: components
+    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.`,
+    ...message
   });
 }
 
@@ -203,19 +201,20 @@ const buttons = [
         return interaction.reply({ content: 'Could not find the target channel. It might have been deleted.', ephemeral: true });
       }
 
-      const embed = interaction.client.embedCreatorManager.buildEmbed(userId);
+      const message = interaction.client.embedCreatorManager.buildMessage(userId);
       
       try {
-        await targetChannel.send({ embeds: [embed] });
+        await targetChannel.send(message);
         interaction.client.embedCreatorManager.clearState(userId);
         await interaction.update({
-          content: `✅ Embed successfully sent to ${targetChannel}!`,
+          content: `✅ Message successfully sent to ${targetChannel}!`,
           embeds: [],
-          components: []
+          components: [],
+          flags: 0 // Clear v2 flags for the success message if needed, but interaction.update doesn't really care about it here as we are removing components
         });
       } catch (error) {
-        logger.error(`Error sending embed to channel ${state.targetChannelId}:`, error);
-        await interaction.reply({ content: 'Failed to send embed to the channel. Make sure I have permission to send messages there.', ephemeral: true });
+        logger.error(`Error sending message to channel ${state.targetChannelId}:`, error);
+        await interaction.reply({ content: 'Failed to send message to the channel. Make sure I have permission to send messages there.', ephemeral: true });
       }
     }
   },

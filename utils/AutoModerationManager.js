@@ -1,6 +1,7 @@
 import { createLogger } from './Logger.js';
 import { EmbedBuilder, PermissionsBitField } from 'discord.js';
-import { getDefaultThumbnail } from './ConfigLoader.js';
+import { getDefaultThumbnail, getMessageStyle } from './ConfigLoader.js';
+import { ComponentBuilder } from './ComponentBuilder.js';
 
 export class AutoModerationManager {
   constructor(client, config) {
@@ -175,7 +176,22 @@ export class AutoModerationManager {
       const channel = await this.client.channels.fetch(logChannelId).catch(() => null);
       if (!channel) return;
 
-      const logStyle = this.config.autoModeration.logChannelStyle || 'embed';
+      const logStyle = getMessageStyle(this.config, 'autoModeration');
+
+      if (logStyle === 'v2') {
+        const v2Message = ComponentBuilder.buildV2Message({
+          title: 'Auto-Moderation Action',
+          description: `**User**: ${message.author.tag} (${message.author.id})\n` +
+                      `**Channel**: ${message.channel}\n` +
+                      `**Trigger**: ${triggerType}\n` +
+                      `**Reason**: ${reason}\n` +
+                      `**Action Taken**: ${actionTaken}\n\n` +
+                      (message.content ? `**Message Content**:\n${message.content.substring(0, 500)}` : ''),
+          accentColor: this.config.embedColors?.autoModeration || this.config.embedColors?.warning || 0xFFAA00
+        });
+        await channel.send(v2Message).catch(err => this.logger.error('Failed to send v2 log message:', err));
+        return;
+      }
 
       if (logStyle === 'plain') {
         let logText = `**[Auto-Mod]** Action taken on ${message.author.tag} (${message.author.id})\n`;

@@ -135,6 +135,40 @@ export function getDefaultThumbnail(config, client) {
   return client.user.displayAvatarURL();
 }
 
+/**
+ * Gets the effective message style for a feature, considering inheritance
+ * @param {Object} config The bot configuration
+ * @param {string} featureKey The key of the feature in the config
+ * @returns {string} "embed" or "v2"
+ */
+export function getMessageStyle(config, featureKey) {
+  const globalStyle = config.messageStyle || 'embed';
+  
+  // Special case for features that use different naming for style
+  if (featureKey === 'videoNotifier' && config.videoNotifier?.notificationStyle) {
+    const style = config.videoNotifier.notificationStyle;
+    return style === 'inherit' ? globalStyle : style;
+  }
+  
+  if (featureKey === 'autoModeration' && config.autoModeration?.logChannelStyle) {
+    const style = config.autoModeration.logChannelStyle;
+    return style === 'inherit' ? globalStyle : style;
+  }
+  
+  if (featureKey === 'tempVoiceChannels') {
+    const style = config.tempChannelSettings?.messageStyle;
+    return (!style || style === 'inherit') ? globalStyle : style;
+  }
+
+  const featureStyle = config[featureKey]?.messageStyle;
+  
+  if (!featureStyle || featureStyle === 'inherit') {
+    return globalStyle;
+  }
+  
+  return featureStyle;
+}
+
 export function reloadConfig() {
   try {
     const configData = readFileSync(configPath, 'utf-8');

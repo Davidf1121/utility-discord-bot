@@ -74,6 +74,10 @@ export class TicketManager {
         title,
       });
 
+      const staffMentions = ticketConfig.ticketStaffRoles && ticketConfig.ticketStaffRoles.length > 0
+        ? ticketConfig.ticketStaffRoles.map(roleId => `<@&${roleId}>`).join(' ')
+        : '';
+
       const welcomeEmbed = new EmbedBuilder()
         .setTitle(`Ticket: ${title}`)
         .setThumbnail(getDefaultThumbnail(this.config, this.client))
@@ -86,6 +90,10 @@ export class TicketManager {
         .setColor(this.config.embedColors.ticket || this.config.embedColors.primary)
         .setTimestamp();
 
+      if (staffMentions) {
+        welcomeEmbed.addFields({ name: 'Staff Notified', value: staffMentions });
+      }
+
       const closeButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('close_ticket')
@@ -94,8 +102,12 @@ export class TicketManager {
           .setEmoji('🔒')
       );
 
+      const content = ticketConfig.pingStaffOnCreate && staffMentions
+        ? `<@${user.id}> | ${staffMentions}`
+        : `<@${user.id}> | Staff`;
+
       await channel.send({
-        content: `<@${user.id}> | Staff`,
+        content,
         embeds: [welcomeEmbed],
         components: [closeButton],
       });
@@ -121,6 +133,35 @@ export class TicketManager {
 
       await channel.send({ embeds: [closingEmbed] });
       
+      // Log to control channel
+      if (this.config.controlChannelId) {
+        try {
+          const controlChannel = await this.client.channels.fetch(this.config.controlChannelId).catch(() => null);
+          if (controlChannel && controlChannel.isTextBased()) {
+            const ticketInfo = this.openTickets.get(channel.id);
+            const logEmbed = new EmbedBuilder()
+              .setTitle('🔒 Ticket Closed')
+              .setColor(this.config.embedColors.warning)
+              .addFields(
+                { name: 'Channel', value: `#${channel.name}`, inline: true },
+                { name: 'Closed by', value: `${closedBy.tag} (<@${closedBy.id}>)`, inline: true }
+              )
+              .setTimestamp();
+            
+            if (ticketInfo) {
+              logEmbed.addFields(
+                { name: 'Ticket Title', value: ticketInfo.title || 'Unknown', inline: false },
+                { name: 'Opened by', value: `<@${ticketInfo.userId}>`, inline: true }
+              );
+            }
+
+            await controlChannel.send({ embeds: [logEmbed] }).catch(err => this.logger.debug('Could not send close log to control channel:', err));
+          }
+        } catch (err) {
+          this.logger.debug('Error sending ticket close log:', err);
+        }
+      }
+
       this.logger.info(`Closing ticket channel ${channel.id}`);
       
       setTimeout(async () => {

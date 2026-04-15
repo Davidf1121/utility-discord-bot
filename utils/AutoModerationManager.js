@@ -175,6 +175,24 @@ export class AutoModerationManager {
       const channel = await this.client.channels.fetch(logChannelId).catch(() => null);
       if (!channel) return;
 
+      const logStyle = this.config.autoModeration.logChannelStyle || 'embed';
+
+      if (logStyle === 'plain') {
+        let logText = `**[Auto-Mod]** Action taken on ${message.author.tag} (${message.author.id})\n`;
+        logText += `**Trigger:** ${triggerType}\n`;
+        logText += `**Reason:** ${reason}\n`;
+        logText += `**Action Taken:** ${actionTaken}\n`;
+        logText += `**Channel:** ${message.channel}`;
+        
+        if (message.content) {
+          const truncatedContent = message.content.length > 500 ? message.content.substring(0, 497) + '...' : message.content;
+          logText += `\n**Content:** ${truncatedContent}`;
+        }
+
+        await channel.send(logText).catch(err => this.logger.error('Failed to send plain log message:', err));
+        return;
+      }
+
       const embed = new EmbedBuilder()
         .setTitle('Auto-Moderation Action')
         .setThumbnail(getDefaultThumbnail(this.config, this.client))

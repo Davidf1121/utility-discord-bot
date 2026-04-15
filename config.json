@@ -23,7 +23,8 @@
     "github": 2500399,
     "mcsrv": 2500399,
     "rcon": 2500399,
-    "autoModeration": 2500399
+    "autoModeration": 2500399,
+    "embedCreator": 2500399
   },
   "features": {
     "tempVoiceChannels": true,

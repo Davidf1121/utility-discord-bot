@@ -9,6 +9,7 @@ import { TicketManager } from './utils/TicketManager.js';
 import { VideoNotifierManager } from './utils/VideoNotifierManager.js';
 import { GitHubNotifierManager } from './utils/GitHubNotifierManager.js';
 import { AutoModerationManager } from './utils/AutoModerationManager.js';
+import { EmbedCreatorManager } from './utils/EmbedCreatorManager.js';
 import { MinecraftPing } from './utils/MinecraftPing.js';
 import { MinecraftRcon } from './utils/MinecraftRcon.js';
 import path from 'path';
@@ -39,6 +40,7 @@ const ticketManager = new TicketManager(client, config);
 const videoNotifierManager = new VideoNotifierManager(client, config, configPath);
 const githubNotifierManager = new GitHubNotifierManager(client, config);
 const autoModerationManager = new AutoModerationManager(client, config);
+const embedCreatorManager = new EmbedCreatorManager(client, config);
 const minecraftPing = new MinecraftPing(config);
 const minecraftRcon = new MinecraftRcon(config);
 
@@ -47,6 +49,7 @@ client.ticketManager = ticketManager;
 client.videoNotifierManager = videoNotifierManager;
 client.githubNotifierManager = githubNotifierManager;
 client.autoModerationManager = autoModerationManager;
+client.embedCreatorManager = embedCreatorManager;
 client.minecraftPing = minecraftPing;
 client.minecraftRcon = minecraftRcon;
 
@@ -58,6 +61,7 @@ function updateConfigManagers(newConfig) {
   videoNotifierManager.config = config;
   githubNotifierManager.config = config;
   autoModerationManager.config = config;
+  embedCreatorManager.config = config;
   minecraftPing.config = config;
   minecraftRcon.config = config;
   logger.info('Updated config references for all managers');
@@ -128,12 +132,14 @@ async function loadComponents() {
     for (const file of componentFiles) {
       const filePath = path.join(componentsPath, file);
       const componentModule = await import(`file://${filePath.replace(/\\/g, '/')}`);
-      const component = componentModule.default;
+      const components = Array.isArray(componentModule.default) ? componentModule.default : [componentModule.default];
       
-      if (component.customId) {
-        client.components = client.components || new Collection();
-        client.components.set(component.customId, component);
-        logger.info(`Loaded component: ${component.customId}`);
+      for (const component of components) {
+        if (component && component.customId) {
+          client.components = client.components || new Collection();
+          client.components.set(component.customId, component);
+          logger.info(`Loaded component: ${component.customId}`);
+        }
       }
     }
   } catch (error) {

@@ -122,12 +122,11 @@ async function handleAdd(interaction) {
 
     savedServers.push(newServer);
 
-    const { loadConfig } = await import('../utils/ConfigLoader.js');
-    const { writeFileSync } = await import('fs');
+    const { loadConfig, saveConfig } = await import('../utils/ConfigLoader.js');
     const newConfig = loadConfig();
     newConfig.rcon = newConfig.rcon || {};
     newConfig.rcon.savedServers = savedServers;
-    writeFileSync('./config.json', JSON.stringify(newConfig, null, 2));
+    saveConfig(newConfig);
 
   } catch (error) {
     if (interaction.deferred) {
@@ -163,12 +162,11 @@ async function handleRemove(interaction) {
   const rcon = interaction.client.minecraftRcon;
   await rcon.disconnect(removed);
 
-  const { loadConfig } = await import('../utils/ConfigLoader.js');
-  const { writeFileSync } = await import('fs');
+  const { loadConfig, saveConfig } = await import('../utils/ConfigLoader.js');
   const newConfig = loadConfig();
   newConfig.rcon = newConfig.rcon || {};
   newConfig.rcon.savedServers = savedServers;
-  writeFileSync('./config.json', JSON.stringify(newConfig, null, 2));
+  saveConfig(newConfig);
 
   await interaction.reply({
     content: `✅ Removed RCON server: ${removed.name} (${removed.address})`,

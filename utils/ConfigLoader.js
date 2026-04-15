@@ -15,7 +15,44 @@ export function loadConfig() {
   
   try {
     const configData = readFileSync(configPath, 'utf-8');
-    return JSON.parse(configData);
+    const config = JSON.parse(configData);
+    
+    // Ensure all Discord IDs are strings to avoid precision issues
+    if (config.clientId) config.clientId = String(config.clientId);
+    if (config.guildId) config.guildId = String(config.guildId);
+    if (config.controlChannelId) config.controlChannelId = String(config.controlChannelId);
+    if (config.voiceCategoryId) config.voiceCategoryId = String(config.voiceCategoryId);
+    
+    if (config.ticketSystem) {
+      if (config.ticketSystem.ticketCategoryId) {
+        config.ticketSystem.ticketCategoryId = String(config.ticketSystem.ticketCategoryId);
+      }
+      if (Array.isArray(config.ticketSystem.ticketStaffRoles)) {
+        config.ticketSystem.ticketStaffRoles = config.ticketSystem.ticketStaffRoles.map(id => String(id));
+      }
+    }
+    
+    if (config.autoModeration && config.autoModeration.logChannelId) {
+      config.autoModeration.logChannelId = String(config.autoModeration.logChannelId);
+    }
+    
+    if (config.videoNotifier) {
+      if (config.videoNotifier.notificationChannelId) {
+        config.videoNotifier.notificationChannelId = String(config.videoNotifier.notificationChannelId);
+      }
+      if (config.videoNotifier.youtubeNotificationChannelId) {
+        config.videoNotifier.youtubeNotificationChannelId = String(config.videoNotifier.youtubeNotificationChannelId);
+      }
+      if (config.videoNotifier.tiktokNotificationChannelId) {
+        config.videoNotifier.tiktokNotificationChannelId = String(config.videoNotifier.tiktokNotificationChannelId);
+      }
+    }
+    
+    if (config.github && config.github.notificationChannelId) {
+      config.github.notificationChannelId = String(config.github.notificationChannelId);
+    }
+    
+    return config;
   } catch (error) {
     throw new Error(`Failed to load config.json: ${error.message}`);
   }
@@ -47,6 +84,41 @@ export function getConfig() {
 
 export function saveConfig(config) {
   try {
+    // Ensure all Discord IDs are strings before saving
+    if (config.clientId) config.clientId = String(config.clientId);
+    if (config.guildId) config.guildId = String(config.guildId);
+    if (config.controlChannelId) config.controlChannelId = String(config.controlChannelId);
+    if (config.voiceCategoryId) config.voiceCategoryId = String(config.voiceCategoryId);
+    
+    if (config.ticketSystem) {
+      if (config.ticketSystem.ticketCategoryId) {
+        config.ticketSystem.ticketCategoryId = String(config.ticketSystem.ticketCategoryId);
+      }
+      if (Array.isArray(config.ticketSystem.ticketStaffRoles)) {
+        config.ticketSystem.ticketStaffRoles = config.ticketSystem.ticketStaffRoles.map(id => String(id));
+      }
+    }
+    
+    if (config.autoModeration && config.autoModeration.logChannelId) {
+      config.autoModeration.logChannelId = String(config.autoModeration.logChannelId);
+    }
+    
+    if (config.videoNotifier) {
+      if (config.videoNotifier.notificationChannelId) {
+        config.videoNotifier.notificationChannelId = String(config.videoNotifier.notificationChannelId);
+      }
+      if (config.videoNotifier.youtubeNotificationChannelId) {
+        config.videoNotifier.youtubeNotificationChannelId = String(config.videoNotifier.youtubeNotificationChannelId);
+      }
+      if (config.videoNotifier.tiktokNotificationChannelId) {
+        config.videoNotifier.tiktokNotificationChannelId = String(config.videoNotifier.tiktokNotificationChannelId);
+      }
+    }
+    
+    if (config.github && config.github.notificationChannelId) {
+      config.github.notificationChannelId = String(config.github.notificationChannelId);
+    }
+
     const configData = JSON.stringify(config, null, 2);
     writeFileSync(configPath, configData, 'utf-8');
     return true;

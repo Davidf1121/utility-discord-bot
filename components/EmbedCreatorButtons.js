@@ -11,6 +11,7 @@ async function updatePreview(interaction) {
 
   await interaction.update({
     content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.`,
+    flags: 0,
     ...message
   });
 }
@@ -232,7 +233,8 @@ const buttons = [
       await interaction.update({
         content: '❌ Embed creation cancelled.',
         embeds: [],
-        components: []
+        components: [],
+        flags: 0
       });
     }
   }

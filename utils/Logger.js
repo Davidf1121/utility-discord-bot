@@ -1,3 +1,37 @@
+import fs from 'fs';
+import path from 'path';
+
+const LOG_FILE = path.join(process.cwd(), 'bot.log');
+const MAX_LOG_SIZE = 5 * 1024 * 1024; // 5MB
+
+function writeToFile(moduleName, level, args) {
+  try {
+    const timestamp = new Date().toISOString();
+    const cleanArgs = args.map(a => {
+      if (typeof a === 'object' && a !== null) {
+        try {
+          return JSON.stringify(a, (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+          );
+        } catch (e) {
+          return '[Complex Object]';
+        }
+      }
+      return String(a);
+    }).join(' ');
+
+    const logEntry = `[${timestamp}] [${moduleName} ${level}] ${cleanArgs}\n`;
+
+    if (fs.existsSync(LOG_FILE) && fs.statSync(LOG_FILE).size > MAX_LOG_SIZE) {
+      fs.renameSync(LOG_FILE, LOG_FILE + '.old');
+    }
+
+    fs.appendFileSync(LOG_FILE, logEntry);
+  } catch (err) {
+    console.error('Failed to write to log file:', err);
+  }
+}
+
 let logConfig = {
   showTimestamp: true,
   defaultLevel: 'INFO',
@@ -60,21 +94,25 @@ export function createLogger(moduleName = 'App', overrideConfig = null) {
     error: (...args) => {
       if (shouldLog('ERROR')) {
         console.log(`${getTimestamp()}${colors.ERROR}[${moduleName} ERROR]${colors.RESET}`, ...args);
+        writeToFile(moduleName, 'ERROR', args);
       }
     },
     warn: (...args) => {
       if (shouldLog('WARN')) {
         console.log(`${getTimestamp()}${colors.WARN}[${moduleName} WARN]${colors.RESET}`, ...args);
+        writeToFile(moduleName, 'WARN', args);
       }
     },
     info: (...args) => {
       if (shouldLog('INFO')) {
         console.log(`${getTimestamp()}${colors.INFO}[${moduleName} INFO]${colors.RESET}`, ...args);
+        writeToFile(moduleName, 'INFO', args);
       }
     },
     debug: (...args) => {
       if (shouldLog('DEBUG')) {
         console.log(`${getTimestamp()}${colors.DEBUG}[${moduleName} DEBUG]${colors.RESET}`, ...args);
+        writeToFile(moduleName, 'DEBUG', args);
       }
     }
   };

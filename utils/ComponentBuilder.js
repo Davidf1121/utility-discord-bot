@@ -67,7 +67,7 @@ export class ComponentBuilder {
     return button;
   }
 
-  static buildV2Message({ title, description, content, components = [], accentColor = 0x5865F2 }) {
+  static buildV2Message({ title, description, components = [], accentColor = 0x5865F2 }) {
     const containerComponents = [];
 
     if (description) {
@@ -100,9 +100,8 @@ export class ComponentBuilder {
     });
 
     return {
-      content: content || null,
-      components: [this.createActionRow([container])],
-      flags: 32768 // Required flag for v2 components as mentioned in the ticket
+      flags: 32768, // Required flag for v2 components
+      components: [container]
     };
   }
 }

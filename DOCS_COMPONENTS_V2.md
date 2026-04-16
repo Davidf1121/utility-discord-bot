@@ -13,7 +13,7 @@ The `DiscordApiHelper` provides direct access to Discord's REST API using `fetch
 const payload = ComponentBuilder.buildV2Message({
   title: 'My V2 Message',
   description: 'This uses a Container component!',
-  content: 'Optional text content'
+  accentColor: 0x5865F2
 });
 
 await client.apiHelper.sendMessage(channelId, payload);
@@ -59,7 +59,7 @@ const container = ComponentBuilder.createContainer({
 });
 
 const payload = {
-  components: [ComponentBuilder.createActionRow([container])],
+  components: [container],
   flags: 32768 // IS_COMPONENTS_V2
 };
 

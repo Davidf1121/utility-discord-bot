@@ -1,5 +1,15 @@
 # Utility Discord Bot
 
+*Vibe-coded by [cto.new](https://cto.new)*
+
+---
+
+> 🤖 This bot is vibe code made by [cto.new](https://cto.new)
+> 
+> Feel free to use, modify, and distribute this code for your own Discord server! This is a community/educational project.
+
+---
+
 [![Discord.js Version](https://img.shields.io/badge/Discord.js-v14-blue.svg)](https://discord.js.org/)
 [![Node.js Version](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-ISC-yellow.svg)](LICENSE)
@@ -9,8 +19,6 @@
 ---
 
 A modular, configurable Discord bot with utility functionality built with [Discord.js v14](https://discord.js.org/) and JavaScript.
-
-**Bot Author:** Davidf aka darynx
 
 ---
 
@@ -861,6 +869,5 @@ ISC
 | 🚀 Quick Start | [QUICKSTART.md](./QUICKSTART.md) |
 | 📝 Implementation | [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) |
 
----
 
-**Created by Davidf aka darynx**
+

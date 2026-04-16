@@ -71,6 +71,12 @@ export class ComponentBuilder {
 
   static buildV2Message({ titleTextDisplay, description, markdownContent, textDisplays = [], buttons = [], separator = false, components = [], accentColor = 0x5865F2, content = null }) {
     const containerComponents = [];
+    
+    // Support for both boolean and array of indices
+    // If it's an array, we use it for specific placements and disable automatic separator
+    // If it's a boolean, we use it for automatic separator logic
+    const separatorIndices = Array.isArray(separator) ? separator : null;
+    const isSeparatorEnabled = separator === true;
 
     // Add title as text display if provided
     if (titleTextDisplay) {
@@ -79,8 +85,13 @@ export class ComponentBuilder {
 
     // Add text displays from the new array
     if (Array.isArray(textDisplays)) {
-      textDisplays.forEach(text => {
-        if (text) containerComponents.push(this.createTextDisplay(text));
+      textDisplays.forEach((text, index) => {
+        if (text) {
+          containerComponents.push(this.createTextDisplay(text));
+          if (separatorIndices && separatorIndices.includes(index)) {
+            containerComponents.push(this.createSeparator());
+          }
+        }
       });
     }
 
@@ -90,9 +101,10 @@ export class ComponentBuilder {
     }
 
     // Add separator if requested or if we have a title/markdown and content following it
-    const hasTitle = titleTextDisplay || markdownContent || textDisplays.length > 0;
+    // We only do the automatic separator if separator was not provided as an array
+    const hasTitle = titleTextDisplay || markdownContent || (textDisplays.length > 0 && (separatorIndices === null || !separatorIndices.includes(textDisplays.length - 1)));
     const hasContent = description || components.length > 0 || buttons.length > 0;
-    if (separator || (hasTitle && hasContent)) {
+    if (isSeparatorEnabled || (separatorIndices === null && hasTitle && hasContent)) {
       containerComponents.push(this.createSeparator());
     }
 

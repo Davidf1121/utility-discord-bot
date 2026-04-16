@@ -110,6 +110,7 @@ npm run dev
 | `embedColors.success` | Success embed color | 5793287 (Green) |
 | `embedColors.warning` | Warning embed color | 16775964 (Yellow) |
 | `embedColors.error` | Error embed color | 15548997 (Red) |
+| `messageStyle` | Global message style (`embed` or `v2`) | `embed` |
 
 ### 🛡️ Auto-Moderation Configuration
 
@@ -130,6 +131,37 @@ In `config.json`, under `autoModeration`:
 
 ---
 
+## 🎨 Message Styles (Embed vs v2)
+
+The bot supports two primary styles for messages and notifications:
+
+1.  **Embed (Default)**: Traditional Discord rich embeds.
+2.  **v2 (Layout Components)**: Modern Discord layout using Containers, TextDisplays, and Sections. This offers a more native look and feel.
+
+### Configuration
+
+You can set the message style globally or per-feature in `config.json` using the `messageStyle` option.
+
+```json
+{
+  "messageStyle": "embed",
+  "ticketSystem": {
+    "messageStyle": "v2"
+  }
+}
+```
+
+### Changing Styles via Command
+
+Administrators can change message styles directly from Discord using the `/setting` command:
+
+- **Global Style**: `/setting style global style:[embed|v2]`
+- **Feature Specific**: `/setting style feature feature:[tickets|tempvoice|...] style:[embed|v2|inherit]`
+
+For more detailed information on how v2 components work and how to use them, see [DOCS_COMPONENTS_V2.md](./DOCS_COMPONENTS_V2.md).
+
+---
+
 ## 📋 Commands
 
 ### General Commands
@@ -139,6 +171,7 @@ In `config.json`, under `autoModeration`:
 | `/ping` | Check bot latency |
 | `/help` | Display available commands and bot information |
 | `/auto-reload` | Enable/disable automatic config reloading |
+| `/setting` | Manage bot settings, styles, and colors (Admin Only) |
 
 ### 🛡️ Auto-Moderation
 

@@ -4,25 +4,54 @@
 [![Node.js Version](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-ISC-yellow.svg)](LICENSE)
 
-A modular, configurable Discord bot with utility functionality built with Discord.js v14 and JavaScript.
+[✨ Features](#-features) | [📋 Commands](#-commands) | [⚙️ Configuration](#-configuration) | [🎨 Components v2](#-components-v2)
+
+---
+
+A modular, configurable Discord bot with utility functionality built with [Discord.js v14](https://discord.js.org/) and JavaScript.
 
 **Bot Author:** Davidf aka darynx
 
 ---
 
+## 📋 Table of Contents
+- [✨ Features](#-features)
+- [📦 Installation](#-installation)
+- [🚀 Running the Bot](#-running-the-bot)
+- [⚙️ Configuration](#-configuration)
+- [🎨 Components v2](#-components-v2)
+- [📋 Commands](#-commands)
+- [📺 Video Notifier Setup](#-video-notifier-setup)
+- [🐙 GitHub Integration Setup](#-github-integration-setup)
+- [🔄 Auto Config Upgrade](#-auto-config-upgrade)
+- [🎮 Minecraft Server Tools](#-minecraft-server-tools)
+- [🖥️ RCON Console](#-rcon-console)
+- [🎤 Voice Channel Setup](#-voice-channel-setup)
+- [🔐 Required Bot Permissions](#-required-bot-permissions)
+- [📁 Project Structure](#-project-structure)
+- [🛠️ Extending the Bot](#-extending-the-bot)
+- [🤝 Contributing](#-contributing)
+- [📝 License](#-license)
+- [📚 Documentation Reference](#-quick-reference--documentation)
+
+---
+
 ## ✨ Features
 
-- **🎤 Temporary Voice Channels**: Create custom voice channels that auto-delete when empty
-- **🎫 Ticket System**: Create private support ticket channels with custom titles and descriptions
-- **🛡️ Auto-Moderation**: Automatically protect your server from spam, mass mentions, link spam, and suspicious new accounts
-- **📺 Video Notifier**: Monitor YouTube/TikTok channels and get notifications when new content is posted
-- **🐙 GitHub Integration**: Receive Discord notifications for GitHub events (pushes, pull requests, issues)
-- **🎮 Minecraft Server Tools**: Ping Java/Bedrock servers, save favorites, and view status
-- **🖥️ RCON Console**: Execute Minecraft server commands directly from Discord
-- **🧩 Modular Architecture**: Easy to extend with new commands and features
-- **⚙️ Configuration-Based**: All settings externalized in `config.json`
-- **🔄 Auto Config Upgrade**: Automatically merges settings from backup config files
-- **🎨 Customizable**: Configure colors, delays, limits, notification styles, and more
+> **Detailed Documentation:**
+> [🎤 Video Notifier](./VIDEO_NOTIFIER_FEATURE.md) | [🎫 Ticket System](./TICKET_SYSTEM_FEATURE.md) | [🖥️ RCON](./RCON_FEATURE.md) | [🛡️ AutoMod](./AUTOMOD_FEATURE.md) | [🎨 Components v2](./DOCS_COMPONENTS_V2.md)
+
+- **🎤 Temporary Voice Channels** - Create custom voice channels that auto-delete when empty
+- **[🎫 Ticket System](./TICKET_SYSTEM_FEATURE.md)** - Create private support ticket channels with custom titles and descriptions
+- **[🛡️ Auto-Moderation](./AUTOMOD_FEATURE.md)** - Automatically protect your server from spam, mass mentions, link spam, and suspicious new accounts
+- **[📺 Video Notifier](./VIDEO_NOTIFIER_FEATURE.md)** - Monitor YouTube/TikTok channels and get notifications when new content is posted
+- **🐙 GitHub Integration** - Receive Discord notifications for GitHub events (pushes, pull requests, issues)
+- **🎮 Minecraft Server Tools** - Ping Java/Bedrock servers, save favorites, and view status
+- **[🖥️ RCON Console](./RCON_FEATURE.md)** - Execute Minecraft server commands directly from Discord
+- **🧩 Modular Architecture** - Easy to extend with new commands and features
+- **⚙️ Configuration-Based** - All settings externalized in `config.json`
+- **🔄 Auto Config Upgrade** - Automatically merges settings from backup config files
+- **🎨 Customizable** - Configure colors, delays, limits, notification styles, and more
 
 ---
 
@@ -72,6 +101,8 @@ DISCORD_TOKEN=your_bot_token_here
 ### Server (Guild) ID
 1. Enable Developer Mode in Discord (User Settings > Advanced)
 2. Right-click on your server > Copy Server ID
+
+> 💡 **Tip:** To get IDs more easily, you can also use the bot's `/setting` commands once it's up and running.
 
 ### Channel & Category IDs
 1. With Developer Mode enabled
@@ -131,7 +162,9 @@ In `config.json`, under `autoModeration`:
 
 ---
 
-## 🎨 Message Styles (Embed vs v2)
+## 🎨 Components v2
+
+> **Reference Guide:** [DOCS_COMPONENTS_V2.md](./DOCS_COMPONENTS_V2.md)
 
 The bot supports two primary styles for messages and notifications:
 
@@ -163,6 +196,8 @@ For more detailed information on how v2 components work and how to use them, see
 ---
 
 ## 📋 Commands
+
+> **Navigation:** [General](#general-commands) | [Auto-Mod](#-auto-moderation) | [Voice](#voice-channel-commands) | [Tickets](#-ticket-system-commands) | [Minecraft](#minecraft-server-commands-admin-only) | [RCON](#rcon-commands-admin-only) | [Video](#video-notifier-commands-admin-only) | [GitHub](#github-integration-commands-admin-only)
 
 ### General Commands
 
@@ -643,6 +678,8 @@ The bot includes tools for monitoring Minecraft servers - both Java and Bedrock 
 
 Execute Minecraft server console commands directly from Discord using the RCON protocol.
 
+> ⚠️ **Security Warning:** RCON provides full console access to your Minecraft server. Ensure that only trusted administrators have access to these commands and that your RCON password is strong and secure.
+
 ### Setup
 
 1. Enable RCON in your `server.properties`:
@@ -809,6 +846,20 @@ Contributions are welcome! Feel free to open an issue or submit a pull request.
 ## 📝 License
 
 ISC
+
+---
+
+## 📚 Quick Reference & Documentation
+
+| Feature | Detailed Documentation |
+|---------|-----------------------|
+| 🛡️ Auto-Moderation | [AUTOMOD_FEATURE.md](./AUTOMOD_FEATURE.md) |
+| 🎫 Ticket System | [TICKET_SYSTEM_FEATURE.md](./TICKET_SYSTEM_FEATURE.md) |
+| 📺 Video Notifier | [VIDEO_NOTIFIER_FEATURE.md](./VIDEO_NOTIFIER_FEATURE.md) |
+| 🖥️ RCON Console | [RCON_FEATURE.md](./RCON_FEATURE.md) |
+| 🎨 Message Styles (v2) | [DOCS_COMPONENTS_V2.md](./DOCS_COMPONENTS_V2.md) |
+| 🚀 Quick Start | [QUICKSTART.md](./QUICKSTART.md) |
+| 📝 Implementation | [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) |
 
 ---
 

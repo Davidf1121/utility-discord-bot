@@ -1,10 +1,31 @@
-# Discord Components v2 & Raw API Helper
+# Discord Components v2 & Layout Components
 
-Discord Components v2 (IS_COMPONENTS_V2 flag=32768) introduce new layout components like Containers, Sections, Text Displays, and Separators. Since `discord.js` v14 doesn't fully support these yet, we use a raw API helper to send these components.
+Discord Components v2 (IS_COMPONENTS_V2 flag=32768) introduce new layout components like Containers, Sections, Text Displays, and Separators. These allow for richer message formatting beyond traditional embeds. Since `discord.js` v14 doesn't fully support these yet, we use a raw API helper and a custom `ComponentBuilder` to send these components.
+
+## Core Concepts
+
+### IS_COMPONENTS_V2 Flag
+To use v2 components, the message payload must include the `flags` field set to `32768`. This tells Discord to process the new component types.
+
+### Component Types
+| Type | Name | Number | Description |
+|------|------|--------|-------------|
+| 1 | ActionRow | 1 | A row that can contain other components (Buttons, Select Menus). |
+| 2 | Button | 2 | A clickable button. |
+| 3 | StringSelect | 3 | A select menu for strings. |
+| 4 | TextInput | 4 | A text input field (used in modals). |
+| 5 | UserSelect | 5 | A select menu for users. |
+| 6 | RoleSelect | 6 | A select menu for roles. |
+| 7 | MentionableSelect | 7 | A select menu for users and roles. |
+| 8 | ChannelSelect | 8 | A select menu for channels. |
+| 10 | TextDisplay | 10 | A component for displaying text with support for markdown. |
+| 14 | Separator | 14 | A horizontal line separator used to divide content. |
+| 17 | Container | 17 | The top-level component that wraps all other layout components. Supports an accent color. |
+| 18 | Section | 18 | A logical section within a container to group components. |
 
 ## DiscordApiHelper
 
-The `DiscordApiHelper` provides direct access to Discord's REST API using `fetch()`.
+The `DiscordApiHelper` provides direct access to Discord's REST API using `fetch()` to send payloads that `discord.js` might not yet support.
 
 ### Usage
 
@@ -19,50 +40,89 @@ const payload = ComponentBuilder.buildV2Message({
 await client.apiHelper.sendMessage(channelId, payload);
 ```
 
-### Methods
-
-- `sendMessage(channelId, payload)`: Send a message to a channel.
-- `editMessage(channelId, messageId, payload)`: Edit an existing message.
-- `deleteMessage(channelId, messageId)`: Delete a message.
-- `sendInteractionResponse(interactionId, interactionToken, payload)`: Respond to an interaction.
-- `editOriginalInteractionResponse(applicationId, interactionToken, payload)`: Edit the original interaction response.
-- `sendFollowupMessage(applicationId, interactionToken, payload)`: Send a followup message.
-
 ## ComponentBuilder V2
 
-The `ComponentBuilder` has been enhanced to support V2 component types.
+The `ComponentBuilder` utility makes it easy to construct these complex nested objects.
 
-### Component Types
-
-- `Container` (17): A box that can contain other components.
-- `Section` (18): A section within a container.
-- `TextDisplay` (10): A component for displaying text.
-- `Separator` (14): A horizontal line separator.
-
-### Example: Building a complex V2 message
-
+### Basic Container with Title
 ```javascript
 const container = ComponentBuilder.createContainer({
   accentColor: 0x5865F2,
   components: [
-    ComponentBuilder.createSection({
-      components: [
-        ComponentBuilder.createTextDisplay('# Main Title'),
-        ComponentBuilder.createSeparator(),
-        ComponentBuilder.createTextDisplay('Text inside a section'),
-        ComponentBuilder.createSeparator(),
-        ComponentBuilder.createActionRow([
-          ComponentBuilder.createButton({ customId: 'btn1', label: 'Click Me', style: 1 })
-        ])
-      ]
-    })
+    ComponentBuilder.createTextDisplay('# This is a Title')
   ]
 });
-
-const payload = {
-  components: [container],
-  flags: 32768 // IS_COMPONENTS_V2
-};
-
-await client.apiHelper.sendMessage(channelId, payload);
 ```
+
+### Multiple TextDisplays
+```javascript
+const container = ComponentBuilder.createContainer({
+  components: [
+    ComponentBuilder.createTextDisplay('First paragraph of text.'),
+    ComponentBuilder.createTextDisplay('Second paragraph with **bold** text.')
+  ]
+});
+```
+
+### Separators
+Separators can be placed between any components to provide visual distinction.
+```javascript
+const container = ComponentBuilder.createContainer({
+  components: [
+    ComponentBuilder.createTextDisplay('Content Above'),
+    ComponentBuilder.createSeparator(),
+    ComponentBuilder.createTextDisplay('Content Below')
+  ]
+});
+```
+
+### Buttons in ActionRow
+Buttons must still be wrapped in an `ActionRow`.
+```javascript
+const actionRow = ComponentBuilder.createActionRow([
+  ComponentBuilder.createButton({ customId: 'primary_btn', label: 'Click Me', style: 1 }),
+  ComponentBuilder.createButton({ url: 'https://google.com', label: 'Google', style: 5 })
+]);
+
+const container = ComponentBuilder.createContainer({
+  components: [
+    ComponentBuilder.createTextDisplay('Check out these buttons:'),
+    actionRow
+  ]
+});
+```
+
+### Full "Embed-Like" Message Example
+```javascript
+const payload = ComponentBuilder.buildV2Message({
+  titleTextDisplay: 'Server Status',
+  textDisplays: [
+    '🟢 **Online**',
+    'Players: 10/100',
+    'Uptime: 24h'
+  ],
+  separator: [0, 2], // Separator after 1st and 3rd text display
+  buttons: [
+    { customId: 'refresh', label: 'Refresh', style: 1 }
+  ],
+  accentColor: 0x00FF00
+});
+```
+
+## Limitations & Rules
+
+1. **No Embeds**: You cannot use `embeds` in the same message as v2 components.
+2. **No Content Field (usually)**: When using v2 components, the top-level `content` field is often restricted or should be left null if you want the container to be the primary focus.
+3. **Container required**: v2 layout components (TextDisplay, Section, etc.) MUST be inside a `Container` (Type 17).
+4. **Flag required**: Don't forget `flags: 32768`.
+
+## Troubleshooting
+
+### Error: "MESSAGE_CANNOT_USE_LEGACY_FIELDS_WITH_COMPONENTS_V2"
+This error occurs when you try to send a message that contains both v2 components and legacy fields like `embeds`. 
+**Solution**: Remove the `embeds` array from your payload. Use `TextDisplay` components within a `Container` to recreate the look of an embed.
+
+### Components not showing
+- Ensure `flags: 32768` is present at the top level of the payload.
+- Ensure all layout components are wrapped in a `Container` (type 17).
+- Check that your bot has the necessary permissions to send messages and embed links.

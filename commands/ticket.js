@@ -10,6 +10,14 @@ export default {
       subcommand
         .setName('setup')
         .setDescription('Send the ticket creation button')
+        .addChannelOption(option =>
+          option
+            .setName('channel')
+            .setDescription('The channel to send the setup message to (defaults to current channel)'))
+        .addStringOption(option =>
+          option
+            .setName('message')
+            .setDescription('Custom description for the setup message'))
     )
     .addSubcommand(subcommand =>
       subcommand
@@ -29,6 +37,9 @@ export default {
         });
       }
 
+      const targetChannel = interaction.options.getChannel('channel') || interaction.channel;
+      const customMessage = interaction.options.getString('message');
+
       const style = getMessageStyle(config, 'ticketSystem');
       
       const button = ComponentBuilder.createButton({
@@ -37,10 +48,12 @@ export default {
         style: ButtonStyle.Primary
       });
 
+      let messagePayload;
+
       if (style === 'v2') {
-        const v2Message = ComponentBuilder.buildV2Message({
+        messagePayload = ComponentBuilder.buildV2Message({
           title: '🎫 Support Tickets',
-          description: 'Need help? Click the button below to open a support ticket!\n\n' +
+          description: customMessage || 'Need help? Click the button below to open a support ticket!\n\n' +
                       '**Before Opening**\n' +
                       'Please ensure you have read the rules and FAQ before opening a ticket.\n\n' +
                       '**Staff Response**\n' +
@@ -48,29 +61,41 @@ export default {
           components: [button],
           accentColor: config.embedColors.ticket || config.embedColors.primary
         });
-
-        await interaction.reply(v2Message);
       } else {
         const embed = new EmbedBuilder()
           .setColor(config.embedColors.ticket || config.embedColors.primary)
           .setTitle('🎫 Support Tickets')
           .setThumbnail(getDefaultThumbnail(config, interaction.client))
-          .setDescription('Need help? Click the button below to open a support ticket!')
-          .addFields(
-            { name: 'Before Opening', value: 'Please ensure you have read the rules and FAQ before opening a ticket.', inline: false },
-            { name: 'Staff Response', value: 'Our staff will be with you as soon as possible. Please be patient.', inline: false }
-          )
+          .setDescription(customMessage || 'Need help? Click the button below to open a support ticket!')
           .setFooter({ text: 'Ticket System' })
           .setTimestamp();
+
+        if (!customMessage) {
+          embed.addFields(
+            { name: 'Before Opening', value: 'Please ensure you have read the rules and FAQ before opening a ticket.', inline: false },
+            { name: 'Staff Response', value: 'Our staff will be with you as soon as possible. Please be patient.', inline: false }
+          );
+        }
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder(button)
         );
 
-        await interaction.reply({
+        messagePayload = {
           embeds: [embed],
           components: [row]
-        });
+        };
+      }
+
+      if (targetChannel.id === interaction.channel.id) {
+        await interaction.reply(messagePayload);
+      } else {
+        try {
+          await targetChannel.send(messagePayload);
+          await interaction.reply({ content: `✅ Ticket setup message sent to ${targetChannel}`, ephemeral: true });
+        } catch (error) {
+          await interaction.reply({ content: `❌ Failed to send message to ${targetChannel}: ${error.message}`, ephemeral: true });
+        }
       }
     } else if (subcommand === 'close') {
       const isTicket = interaction.client.ticketManager.isTicketChannel(interaction.channel.id);

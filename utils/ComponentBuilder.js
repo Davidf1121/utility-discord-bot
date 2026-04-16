@@ -67,15 +67,19 @@ export class ComponentBuilder {
     return button;
   }
 
-  static buildV2Message({ title, description, components = [], accentColor = 0x5865F2 }) {
+  static buildV2Message({ title, description, markdownContent, components = [], accentColor = 0x5865F2, content = null }) {
     const containerComponents = [];
+
+    if (markdownContent) {
+      containerComponents.push(this.createTextDisplay(markdownContent));
+    }
 
     if (description) {
       containerComponents.push(this.createTextDisplay(description));
     }
 
     if (components.length > 0) {
-      if (description) {
+      if (description || markdownContent) {
         containerComponents.push(this.createSeparator());
       }
       
@@ -100,6 +104,7 @@ export class ComponentBuilder {
     });
 
     return {
+      content: content,
       flags: 32768, // Required flag for v2 components
       components: [container]
     };

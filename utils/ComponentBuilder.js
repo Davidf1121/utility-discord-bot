@@ -11,6 +11,7 @@ export const ComponentType = {
   TextDisplay: 10,
   Separator: 14,
   Container: 17,
+  Section: 18,
 };
 
 export class ComponentBuilder {
@@ -20,6 +21,13 @@ export class ComponentBuilder {
       title: title,
       description: description,
       accent_color: accentColor,
+      components: components,
+    };
+  }
+
+  static createSection({ components = [] }) {
+    return {
+      type: ComponentType.Section,
       components: components,
     };
   }

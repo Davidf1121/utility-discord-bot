@@ -22,6 +22,7 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 - **VideoNotifierManager.js** - Monitors YouTube/TikTok channels via RSS feeds
 - **GitHubNotifierManager.js** - Receives GitHub webhooks and sends notifications
 - **AutoModerationManager.js** - Monitors server messages and takes configured actions against spam and malicious actors
+- **DiscordApiHelper.js** - Raw Discord API helper for Components v2 support
 - **fileLoader.js** - Utility to load JS files from directories
 
 ### Events (`events/`)
@@ -107,6 +108,13 @@ A complete, modular Discord bot with temporary voice channel functionality, vide
 - Validation of user input in modals
 - Error messages with embed styling
 - Logging for debugging
+
+### 10. Discord Components v2 Support
+- **DiscordApiHelper** for raw REST API access
+- Support for Container, Section, TextDisplay, and Separator components
+- Integration with ComponentBuilder
+- Required flags (32768) and layout structures
+- Documented usage for extending the bot with modern Discord UI
 
 ## Bot Permissions Required
 - Manage Channels (create/delete voice channels)

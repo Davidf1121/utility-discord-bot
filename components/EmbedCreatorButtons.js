@@ -9,8 +9,13 @@ async function updatePreview(interaction) {
   const state = interaction.client.embedCreatorManager.getOrCreateState(userId);
   const targetChannel = interaction.client.channels.cache.get(state.targetChannelId);
 
+  let separatorList = '';
+  if (state.v2.separators && state.v2.separators.length > 0) {
+    separatorList = `\n**Separators after indices:** ${state.v2.separators.join(', ')}`;
+  }
+
   await interaction.update({
-    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.`,
+    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.${separatorList}`,
     ...message
   });
 }
@@ -129,6 +134,29 @@ const buttons = [
       } else {
         await interaction.reply({ content: 'No text displays to remove.', ephemeral: true });
       }
+    }
+  },
+  {
+    customId: 'embed_creator_separator_add',
+    async execute(interaction) {
+      const state = interaction.client.embedCreatorManager.getOrCreateState(interaction.user.id);
+      if (state.v2.textDisplays.length === 0) {
+        return interaction.reply({ content: 'Add some text displays first before adding separators.', ephemeral: true });
+      }
+
+      const modal = new ModalBuilder()
+        .setCustomId('embed_creator_modal_separator')
+        .setTitle('Add Separator');
+
+      const input = new TextInputBuilder()
+        .setCustomId('index_input')
+        .setLabel(`After Text Index (0 to ${state.v2.textDisplays.length - 1})`)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setPlaceholder('Enter the index number...');
+
+      modal.addComponents(new ActionRowBuilder().addComponents(input));
+      await interaction.showModal(modal);
     }
   },
   {

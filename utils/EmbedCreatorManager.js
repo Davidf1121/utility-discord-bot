@@ -30,7 +30,7 @@ export class EmbedCreatorManager {
         v2: {
           textDisplays: [],
           buttons: [],
-          hasMarkdownLine: false
+          separators: []
         },
         previewMessageId: null
       });
@@ -61,17 +61,47 @@ export class EmbedCreatorManager {
 
   removeTextDisplay(userId, index) {
     const state = this.getOrCreateState(userId);
+    let removedIndex;
     if (index === undefined) {
+      removedIndex = state.v2.textDisplays.length - 1;
       state.v2.textDisplays.pop();
     } else {
+      removedIndex = index;
       state.v2.textDisplays.splice(index, 1);
     }
+
+    // Update separators
+    state.v2.separators = state.v2.separators
+      .filter(i => i !== removedIndex) // Remove separator at the removed index
+      .map(i => i > removedIndex ? i - 1 : i); // Shift down separators after the removed index
+      
+    return state;
+  }
+
+  addSeparator(userId, afterIndex) {
+    const state = this.getOrCreateState(userId);
+    if (!state.v2.separators.includes(afterIndex)) {
+      state.v2.separators.push(afterIndex);
+      state.v2.separators.sort((a, b) => a - b);
+    }
+    return state;
+  }
+
+  removeSeparator(userId, afterIndex) {
+    const state = this.getOrCreateState(userId);
+    state.v2.separators = state.v2.separators.filter(i => i !== afterIndex);
     return state;
   }
 
   toggleMarkdownLine(userId) {
     const state = this.getOrCreateState(userId);
-    state.v2.hasMarkdownLine = !state.v2.hasMarkdownLine;
+    // For backward compatibility or simple toggle of the last separator
+    const lastIndex = state.v2.textDisplays.length - 1;
+    if (state.v2.separators.includes(lastIndex)) {
+      this.removeSeparator(userId, lastIndex);
+    } else {
+      this.addSeparator(userId, lastIndex);
+    }
     return state;
   }
 
@@ -152,7 +182,7 @@ export class EmbedCreatorManager {
           customId: b.customId || `v2_btn_${Math.random().toString(36).substr(2, 9)}`,
           style: ButtonStyle.Primary
         })),
-        separator: state.v2.hasMarkdownLine,
+        separator: state.v2.separators,
         accentColor: this._hexToDecimal(state.embed.color)
       });
     } else {
@@ -160,7 +190,7 @@ export class EmbedCreatorManager {
     }
 
     if (includeComponents) {
-      const creatorComponents = this.createComponents(style);
+      const creatorComponents = this.createComponents(style, state);
       if (message.components) {
         message.components.push(...creatorComponents);
       } else {
@@ -171,12 +201,14 @@ export class EmbedCreatorManager {
     return message;
   }
 
-  createComponents(style = 'embed') {
+  createComponents(style = 'embed', state = null) {
     if (style === 'v2') {
+      const sepCount = state?.v2?.separators?.length || 0;
       const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('embed_creator_textdisplay_add').setLabel('Add Text').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId('embed_creator_textdisplay_remove').setLabel('Remove Last Text').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId('embed_creator_markdown_line').setLabel('Toggle Separator').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('embed_creator_textdisplay_remove').setLabel('Remove Last').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('embed_creator_separator_add').setLabel('Add Separator').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('embed_creator_markdown_line').setLabel(`Seps (${sepCount})`).setStyle(ButtonStyle.Secondary),
         new ButtonBuilder().setCustomId('embed_creator_button_add').setLabel('Add Button').setStyle(ButtonStyle.Secondary)
       );
 

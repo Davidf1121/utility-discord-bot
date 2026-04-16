@@ -8,8 +8,13 @@ async function updatePreview(interaction) {
   const state = interaction.client.embedCreatorManager.getOrCreateState(userId);
   const targetChannel = interaction.client.channels.cache.get(state.targetChannelId);
 
+  let separatorList = '';
+  if (state.v2.separators && state.v2.separators.length > 0) {
+    separatorList = `\n**Separators after indices:** ${state.v2.separators.join(', ')}`;
+  }
+
   await interaction.update({
-    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.`,
+    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.${separatorList}`,
     ...message
   });
 }
@@ -88,6 +93,29 @@ const modals = [
     async execute(interaction) {
       const content = interaction.fields.getTextInputValue('text_input');
       interaction.client.embedCreatorManager.addTextDisplay(interaction.user.id, content);
+      await updatePreview(interaction);
+    }
+  },
+  {
+    customId: 'embed_creator_modal_separator',
+    async execute(interaction) {
+      const indexStr = interaction.fields.getTextInputValue('index_input');
+      const index = parseInt(indexStr);
+      
+      if (isNaN(index)) {
+        return interaction.reply({ content: 'Please enter a valid number for the index.', ephemeral: true });
+      }
+
+      const state = interaction.client.embedCreatorManager.getOrCreateState(interaction.user.id);
+      if (index < 0 || index >= state.v2.textDisplays.length) {
+        return interaction.reply({ content: `Invalid index. Please enter a number between 0 and ${state.v2.textDisplays.length - 1}.`, ephemeral: true });
+      }
+
+      if (state.v2.separators.includes(index)) {
+        interaction.client.embedCreatorManager.removeSeparator(interaction.user.id, index);
+      } else {
+        interaction.client.embedCreatorManager.addSeparator(interaction.user.id, index);
+      }
       await updatePreview(interaction);
     }
   },

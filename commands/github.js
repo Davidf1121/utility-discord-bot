@@ -12,7 +12,11 @@ export default {
           option
             .setName('channel')
             .setDescription('The channel to send notifications to')
-            .setRequired(true)))
+            .setRequired(true))
+        .addStringOption(option =>
+          option
+            .setName('message')
+            .setDescription('The message to send when a new GitHub event occurs')))
     .addSubcommand(subcommand =>
       subcommand
         .setName('set-port')
@@ -64,11 +68,22 @@ export default {
 
 async function handleSetChannel(interaction, manager) {
   const channel = interaction.options.getChannel('channel');
-  const result = await manager.updateConfig({ notificationChannelId: channel.id });
+  const customMessage = interaction.options.getString('message');
+  
+  const configUpdates = { notificationChannelId: channel.id };
+  if (customMessage) {
+    configUpdates.notificationMessage = customMessage;
+  }
+  
+  const result = await manager.updateConfig(configUpdates);
   
   if (result.success) {
+    let response = `✅ GitHub notification channel set to ${channel}`;
+    if (customMessage) {
+      response += `\n✅ Notification message set to: ${customMessage}`;
+    }
     await interaction.reply({
-      content: `✅ GitHub notification channel set to ${channel}`,
+      content: response,
       ephemeral: true
     });
   } else {

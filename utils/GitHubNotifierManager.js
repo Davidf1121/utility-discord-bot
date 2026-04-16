@@ -99,6 +99,7 @@ export class GitHubNotifierManager {
 
   async sendNotification(embed) {
     const channelId = this.config.github.notificationChannelId;
+    const notificationMessage = this.config.github.notificationMessage;
     
     if (!channelId) {
       this.logger.warn('No GitHub notification channel configured, skipping notification');
@@ -112,7 +113,10 @@ export class GitHubNotifierManager {
         return;
       }
 
-      await channel.send({ embeds: [embed] });
+      await channel.send({ 
+        content: notificationMessage || null,
+        embeds: [embed] 
+      });
       this.logger.info('Sent GitHub notification');
     } catch (error) {
       this.logger.error('Error sending GitHub notification:', error);

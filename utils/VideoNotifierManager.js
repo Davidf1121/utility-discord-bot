@@ -138,6 +138,7 @@ export class VideoNotifierManager {
 
   async sendVideoNotification(video, platform, channelLabel) {
     const channelId = this.config.videoNotifier.notificationChannelId;
+    const notificationMessage = this.config.videoNotifier.notificationMessage;
     
     if (!channelId) {
       this.logger.warn('No notification channel configured, skipping notification');
@@ -158,10 +159,13 @@ export class VideoNotifierManager {
         await channel.send(v2Message);
       } else if (style === 'simple') {
         const message = this.createSimpleMessage(video, platform, channelLabel);
-        await channel.send({ content: message });
+        await channel.send({ content: (notificationMessage ? `${notificationMessage}\n` : '') + message });
       } else {
         const embed = this.createEmbed(video, platform, channelLabel);
-        await channel.send({ embeds: [embed] });
+        await channel.send({ 
+          content: notificationMessage || null,
+          embeds: [embed] 
+        });
       }
       this.logger.info(`Sent ${style} notification for ${platform} video: ${video.title}`);
     } catch (error) {
@@ -182,6 +186,7 @@ export class VideoNotifierManager {
 
     const includeDescription = this.config.videoNotifier.embedSettings?.includeDescription ?? true;
     const descriptionLength = this.config.videoNotifier.embedSettings?.descriptionLength ?? 200;
+    const notificationMessage = this.config.videoNotifier.notificationMessage;
     
     let description = '';
     if (includeDescription && video.contentSnippet) {
@@ -199,6 +204,7 @@ export class VideoNotifierManager {
 
     return ComponentBuilder.buildV2Message({
       title: `${icon} New Video from ${channelLabel}`,
+      markdownContent: notificationMessage,
       description: `**${video.title}**\n\n${description}`,
       components,
       accentColor

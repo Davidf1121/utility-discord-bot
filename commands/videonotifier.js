@@ -60,7 +60,11 @@ export default {
           option
             .setName('channel')
             .setDescription('The channel to send notifications to')
-            .setRequired(true)))
+            .setRequired(true))
+        .addStringOption(option =>
+          option
+            .setName('message')
+            .setDescription('The message to send when a new video is posted')))
     .addSubcommand(subcommand =>
       subcommand
         .setName('toggle')
@@ -429,12 +433,22 @@ async function handleRemoveTikTok(interaction, manager) {
 
 async function handleSetChannel(interaction, manager) {
   const channel = interaction.options.getChannel('channel');
+  const customMessage = interaction.options.getString('message');
   
-  const result = await manager.updateConfig({ notificationChannelId: channel.id });
+  const configUpdates = { notificationChannelId: channel.id };
+  if (customMessage) {
+    configUpdates.notificationMessage = customMessage;
+  }
+  
+  const result = await manager.updateConfig(configUpdates);
   
   if (result.success) {
+    let response = `✅ Notification channel set to ${channel}`;
+    if (customMessage) {
+      response += `\n✅ Notification message set to: ${customMessage}`;
+    }
     await interaction.reply({
-      content: `✅ Notification channel set to ${channel}`,
+      content: response,
       ephemeral: true
     });
   } else {

@@ -12,6 +12,7 @@ import { AutoModerationManager } from './utils/AutoModerationManager.js';
 import { EmbedCreatorManager } from './utils/EmbedCreatorManager.js';
 import { MinecraftPing } from './utils/MinecraftPing.js';
 import { MinecraftRcon } from './utils/MinecraftRcon.js';
+import { DiscordApiHelper } from './utils/DiscordApiHelper.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -52,6 +53,7 @@ client.autoModerationManager = autoModerationManager;
 client.embedCreatorManager = embedCreatorManager;
 client.minecraftPing = minecraftPing;
 client.minecraftRcon = minecraftRcon;
+client.apiHelper = DiscordApiHelper;
 
 function updateConfigManagers(newConfig) {
   config = newConfig;

@@ -16,13 +16,16 @@ export const ComponentType = {
 
 export class ComponentBuilder {
   static createContainer({ title, description, components = [], accentColor = null }) {
-    return {
+    const container = {
       type: ComponentType.Container,
-      title: title,
-      description: description,
-      accent_color: accentColor,
       components: components,
     };
+
+    if (title) container.title = title;
+    if (description) container.description = description;
+    if (accentColor) container.accent_color = accentColor;
+
+    return container;
   }
 
   static createSection({ components = [] }) {
@@ -67,9 +70,17 @@ export class ComponentBuilder {
     return button;
   }
 
-  static buildV2Message({ title, description, markdownContent, components = [], accentColor = 0x5865F2, content = null }) {
+  static buildV2Message({ title, description, markdownContent, textDisplays = [], buttons = [], separator = false, components = [], accentColor = 0x5865F2, content = null }) {
     const containerComponents = [];
 
+    // Add text displays from the new array
+    if (Array.isArray(textDisplays)) {
+      textDisplays.forEach(text => {
+        if (text) containerComponents.push(this.createTextDisplay(text));
+      });
+    }
+
+    // Add legacy text content
     if (markdownContent) {
       containerComponents.push(this.createTextDisplay(markdownContent));
     }
@@ -78,22 +89,30 @@ export class ComponentBuilder {
       containerComponents.push(this.createTextDisplay(description));
     }
 
-    if (components.length > 0) {
-      if (description || markdownContent) {
-        containerComponents.push(this.createSeparator());
-      }
-      
-      // In v2, buttons should be in an ActionRow within the container
-      const buttons = components.filter(comp => comp.type === ComponentType.Button);
-      const nonButtons = components.filter(comp => comp.type !== ComponentType.Button);
+    // Add separator if requested or if we have legacy text and components
+    if (separator || (components.length > 0 && (description || markdownContent))) {
+      containerComponents.push(this.createSeparator());
+    }
 
-      nonButtons.forEach(comp => containerComponents.push(comp));
-      
-      if (buttons.length > 0) {
-        // Group buttons into action rows (max 5 per row)
-        for (let i = 0; i < buttons.length; i += 5) {
-          containerComponents.push(this.createActionRow(buttons.slice(i, i + 5)));
+    // Handle components (legacy and new buttons)
+    const allButtons = [...buttons];
+    const otherComponents = [];
+
+    if (Array.isArray(components)) {
+      components.forEach(comp => {
+        if (comp.type === ComponentType.Button) {
+          allButtons.push(comp);
+        } else {
+          otherComponents.push(comp);
         }
+      });
+    }
+
+    otherComponents.forEach(comp => containerComponents.push(comp));
+
+    if (allButtons.length > 0) {
+      for (let i = 0; i < allButtons.length; i += 5) {
+        containerComponents.push(this.createActionRow(allButtons.slice(i, i + 5)));
       }
     }
 

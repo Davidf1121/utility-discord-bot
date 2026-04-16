@@ -27,6 +27,11 @@ export class EmbedCreatorManager {
           thumbnail: { url: '' },
           timestamp: false
         },
+        v2: {
+          textDisplays: [],
+          buttons: [],
+          hasMarkdownLine: false
+        },
         previewMessageId: null
       });
     } else if (channelId) {
@@ -39,6 +44,40 @@ export class EmbedCreatorManager {
   updateState(userId, data) {
     const state = this.getOrCreateState(userId);
     Object.assign(state.embed, data);
+    return state;
+  }
+
+  updateStateV2(userId, data) {
+    const state = this.getOrCreateState(userId);
+    Object.assign(state.v2, data);
+    return state;
+  }
+
+  addTextDisplay(userId, content) {
+    const state = this.getOrCreateState(userId);
+    state.v2.textDisplays.push(content);
+    return state;
+  }
+
+  removeTextDisplay(userId, index) {
+    const state = this.getOrCreateState(userId);
+    if (index === undefined) {
+      state.v2.textDisplays.pop();
+    } else {
+      state.v2.textDisplays.splice(index, 1);
+    }
+    return state;
+  }
+
+  toggleMarkdownLine(userId) {
+    const state = this.getOrCreateState(userId);
+    state.v2.hasMarkdownLine = !state.v2.hasMarkdownLine;
+    return state;
+  }
+
+  addButton(userId, buttonData) {
+    const state = this.getOrCreateState(userId);
+    state.v2.buttons.push(buttonData);
     return state;
   }
 
@@ -107,8 +146,13 @@ export class EmbedCreatorManager {
     let message;
     if (style === 'v2') {
       message = ComponentBuilder.buildV2Message({
-        title: state.embed.title || '*(No Title)*',
-        description: state.embed.description || '*(No Description)*',
+        textDisplays: state.v2.textDisplays.length > 0 ? state.v2.textDisplays : ['*(No Content)*'],
+        buttons: state.v2.buttons.map(b => ComponentBuilder.createButton({
+          label: b.label,
+          customId: b.customId || `v2_btn_${Math.random().toString(36).substr(2, 9)}`,
+          style: ButtonStyle.Primary
+        })),
+        separator: state.v2.hasMarkdownLine,
         accentColor: this._hexToDecimal(state.embed.color)
       });
     } else {
@@ -116,7 +160,7 @@ export class EmbedCreatorManager {
     }
 
     if (includeComponents) {
-      const creatorComponents = this.createComponents();
+      const creatorComponents = this.createComponents(style);
       if (message.components) {
         message.components.push(...creatorComponents);
       } else {
@@ -127,7 +171,24 @@ export class EmbedCreatorManager {
     return message;
   }
 
-  createComponents() {
+  createComponents(style = 'embed') {
+    if (style === 'v2') {
+      const row1 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('embed_creator_textdisplay_add').setLabel('Add Text').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('embed_creator_textdisplay_remove').setLabel('Remove Last Text').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('embed_creator_markdown_line').setLabel('Toggle Separator').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('embed_creator_button_add').setLabel('Add Button').setStyle(ButtonStyle.Secondary)
+      );
+
+      const row2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('embed_creator_send').setLabel('Send Message').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('embed_creator_reset').setLabel('Reset').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId('embed_creator_cancel').setLabel('Cancel').setStyle(ButtonStyle.Danger)
+      );
+
+      return [row1, row2];
+    }
+
     const row1 = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('embed_creator_title').setLabel('Title').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('embed_creator_description').setLabel('Description').setStyle(ButtonStyle.Secondary),

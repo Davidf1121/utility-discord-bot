@@ -82,6 +82,24 @@ const modals = [
       interaction.client.embedCreatorManager.updateState(interaction.user.id, { thumbnail: { url } });
       await updatePreview(interaction);
     }
+  },
+  {
+    customId: 'embed_creator_modal_textdisplay',
+    async execute(interaction) {
+      const content = interaction.fields.getTextInputValue('text_input');
+      interaction.client.embedCreatorManager.addTextDisplay(interaction.user.id, content);
+      await updatePreview(interaction);
+    }
+  },
+  {
+    customId: 'embed_creator_modal_button',
+    async execute(interaction) {
+      const label = interaction.fields.getTextInputValue('button_label');
+      const customId = interaction.fields.getTextInputValue('button_id');
+      
+      interaction.client.embedCreatorManager.addButton(interaction.user.id, { label, customId: customId || undefined });
+      await updatePreview(interaction);
+    }
   }
 ];
 

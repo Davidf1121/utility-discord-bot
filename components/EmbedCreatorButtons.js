@@ -102,6 +102,70 @@ const buttons = [
     }
   },
   {
+    customId: 'embed_creator_textdisplay_add',
+    async execute(interaction) {
+      const modal = new ModalBuilder()
+        .setCustomId('embed_creator_modal_textdisplay')
+        .setTitle('Add Text Display');
+
+      const input = new TextInputBuilder()
+        .setCustomId('text_input')
+        .setLabel('Content')
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true)
+        .setPlaceholder('Enter markdown content...');
+
+      modal.addComponents(new ActionRowBuilder().addComponents(input));
+      await interaction.showModal(modal);
+    }
+  },
+  {
+    customId: 'embed_creator_textdisplay_remove',
+    async execute(interaction) {
+      const state = interaction.client.embedCreatorManager.getOrCreateState(interaction.user.id);
+      if (state.v2.textDisplays.length > 0) {
+        interaction.client.embedCreatorManager.removeTextDisplay(interaction.user.id);
+        await updatePreview(interaction);
+      } else {
+        await interaction.reply({ content: 'No text displays to remove.', ephemeral: true });
+      }
+    }
+  },
+  {
+    customId: 'embed_creator_markdown_line',
+    async execute(interaction) {
+      interaction.client.embedCreatorManager.toggleMarkdownLine(interaction.user.id);
+      await updatePreview(interaction);
+    }
+  },
+  {
+    customId: 'embed_creator_button_add',
+    async execute(interaction) {
+      const modal = new ModalBuilder()
+        .setCustomId('embed_creator_modal_button')
+        .setTitle('Add Button');
+
+      const labelInput = new TextInputBuilder()
+        .setCustomId('button_label')
+        .setLabel('Button Label')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const idInput = new TextInputBuilder()
+        .setCustomId('button_id')
+        .setLabel('Button Custom ID (Optional)')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false)
+        .setPlaceholder('my_custom_id');
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(labelInput),
+        new ActionRowBuilder().addComponents(idInput)
+      );
+      await interaction.showModal(modal);
+    }
+  },
+  {
     customId: 'embed_creator_field_add',
     async execute(interaction) {
       const state = interaction.client.embedCreatorManager.getOrCreateState(interaction.user.id);

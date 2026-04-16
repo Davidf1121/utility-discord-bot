@@ -11,7 +11,6 @@ async function updatePreview(interaction) {
 
   await interaction.update({
     content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.`,
-    flags: 0,
     ...message
   });
 }
@@ -210,8 +209,7 @@ const buttons = [
         await interaction.update({
           content: `✅ Message successfully sent to ${targetChannel}!`,
           embeds: [],
-          components: [],
-          flags: 0 // Clear v2 flags for the success message if needed, but interaction.update doesn't really care about it here as we are removing components
+          components: []
         });
       } catch (error) {
         logger.error(`Error sending message to channel ${state.targetChannelId}:`, error);
@@ -222,20 +220,42 @@ const buttons = [
   {
     customId: 'embed_creator_reset',
     async execute(interaction) {
-      interaction.client.embedCreatorManager.resetState(interaction.user.id);
-      await updatePreview(interaction);
+      const userId = interaction.user.id;
+      interaction.client.embedCreatorManager.resetState(userId);
+      const message = interaction.client.embedCreatorManager.buildMessage(userId, { includeComponents: true });
+      const state = interaction.client.embedCreatorManager.getOrCreateState(userId);
+      const targetChannel = interaction.client.channels.cache.get(state.targetChannelId);
+
+      await interaction.deferUpdate();
+      await interaction.followUp({
+        content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.`,
+        ephemeral: true,
+        ...message
+      });
+
+      try {
+        await interaction.message.delete();
+      } catch (error) {
+        logger.error('Failed to delete original preview message on reset:', error);
+      }
     }
   },
   {
     customId: 'embed_creator_cancel',
     async execute(interaction) {
       interaction.client.embedCreatorManager.clearState(interaction.user.id);
-      await interaction.update({
+      
+      await interaction.deferUpdate();
+      await interaction.followUp({
         content: '❌ Embed creation cancelled.',
-        embeds: [],
-        components: [],
-        flags: 0
+        ephemeral: true
       });
+
+      try {
+        await interaction.message.delete();
+      } catch (error) {
+        logger.error('Failed to delete original preview message on cancel:', error);
+      }
     }
   }
 ];

@@ -85,13 +85,15 @@ export class ComponentBuilder {
       containerComponents.push(this.createTextDisplay(markdownContent));
     }
 
-    if (description) {
-      containerComponents.push(this.createTextDisplay(description));
+    // Add separator if requested or if we have a title/markdown and content following it
+    const hasTitle = title || markdownContent || textDisplays.length > 0;
+    const hasContent = description || components.length > 0 || buttons.length > 0;
+    if (separator || (hasTitle && hasContent)) {
+      containerComponents.push(this.createSeparator());
     }
 
-    // Add separator if requested or if we have legacy text and components
-    if (separator || (components.length > 0 && (description || markdownContent))) {
-      containerComponents.push(this.createSeparator());
+    if (description) {
+      containerComponents.push(this.createTextDisplay(description));
     }
 
     // Handle components (legacy and new buttons)

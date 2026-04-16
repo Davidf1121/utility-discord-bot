@@ -15,13 +15,12 @@ export const ComponentType = {
 };
 
 export class ComponentBuilder {
-  static createContainer({ title, description, components = [], accentColor = null }) {
+  static createContainer({ description, components = [], accentColor = null }) {
     const container = {
       type: ComponentType.Container,
       components: components,
     };
 
-    if (title) container.title = title;
     if (description) container.description = description;
     if (accentColor) container.accent_color = accentColor;
 
@@ -70,8 +69,13 @@ export class ComponentBuilder {
     return button;
   }
 
-  static buildV2Message({ title, description, markdownContent, textDisplays = [], buttons = [], separator = false, components = [], accentColor = 0x5865F2, content = null }) {
+  static buildV2Message({ titleTextDisplay, description, markdownContent, textDisplays = [], buttons = [], separator = false, components = [], accentColor = 0x5865F2, content = null }) {
     const containerComponents = [];
+
+    // Add title as text display if provided
+    if (titleTextDisplay) {
+      containerComponents.push(this.createTextDisplay("# " + titleTextDisplay));
+    }
 
     // Add text displays from the new array
     if (Array.isArray(textDisplays)) {
@@ -86,7 +90,7 @@ export class ComponentBuilder {
     }
 
     // Add separator if requested or if we have a title/markdown and content following it
-    const hasTitle = title || markdownContent || textDisplays.length > 0;
+    const hasTitle = titleTextDisplay || markdownContent || textDisplays.length > 0;
     const hasContent = description || components.length > 0 || buttons.length > 0;
     if (separator || (hasTitle && hasContent)) {
       containerComponents.push(this.createSeparator());
@@ -119,7 +123,6 @@ export class ComponentBuilder {
     }
 
     const container = this.createContainer({
-      title: title,
       accentColor: accentColor,
       components: containerComponents,
     });

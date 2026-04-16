@@ -11,7 +11,7 @@ The `DiscordApiHelper` provides direct access to Discord's REST API using `fetch
 ```javascript
 // Send a message with v2 components
 const payload = ComponentBuilder.buildV2Message({
-  title: 'My V2 Message',
+  titleTextDisplay: 'My V2 Message',
   description: 'This uses a Container component!',
   accentColor: 0x5865F2
 });
@@ -43,11 +43,12 @@ The `ComponentBuilder` has been enhanced to support V2 component types.
 
 ```javascript
 const container = ComponentBuilder.createContainer({
-  title: 'Main Container',
-  description: 'Container description',
+  accentColor: 0x5865F2,
   components: [
     ComponentBuilder.createSection({
       components: [
+        ComponentBuilder.createTextDisplay('# Main Title'),
+        ComponentBuilder.createSeparator(),
         ComponentBuilder.createTextDisplay('Text inside a section'),
         ComponentBuilder.createSeparator(),
         ComponentBuilder.createActionRow([

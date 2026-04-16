@@ -52,7 +52,7 @@ export default {
 
       if (style === 'v2') {
         messagePayload = ComponentBuilder.buildV2Message({
-          title: '🎫 Support Tickets',
+          titleTextDisplay: '🎫 Support Tickets',
           separator: true,
           description: customMessage || 'Need help? Click the button below to open a support ticket!\n\n' +
                       '**Before Opening**\n' +

@@ -146,7 +146,7 @@ export class TicketManager {
 
       if (style === 'v2') {
         const v2Message = ComponentBuilder.buildV2Message({
-          title: `Ticket: ${title}`,
+          titleTextDisplay: `Ticket: ${title}`,
           description: ticketConfig.ticketWelcomeMessage.replace('{user}', `<@${user.id}>`) + 
                       `\n\n**Description**\n${description || 'No description provided'}` +
                       (staffMentions ? `\n\n**Staff Notified**\n${staffMentions}` : '') +
@@ -212,7 +212,7 @@ export class TicketManager {
       
       if (style === 'v2') {
         const v2Message = ComponentBuilder.buildV2Message({
-          title: 'Ticket Closed',
+          titleTextDisplay: 'Ticket Closed',
           description: `This ticket has been closed by <@${closedBy.id}>.`,
           accentColor: this.config.embedColors.warning
         });

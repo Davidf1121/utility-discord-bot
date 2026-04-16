@@ -180,7 +180,7 @@ export class AutoModerationManager {
 
       if (logStyle === 'v2') {
         const v2Message = ComponentBuilder.buildV2Message({
-          title: 'Auto-Moderation Action',
+          titleTextDisplay: 'Auto-Moderation Action',
           description: `**User**: ${message.author.tag} (${message.author.id})\n` +
                       `**Channel**: ${message.channel}\n` +
                       `**Trigger**: ${triggerType}\n` +

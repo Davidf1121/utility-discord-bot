@@ -203,7 +203,7 @@ export class VideoNotifierManager {
     ];
 
     return ComponentBuilder.buildV2Message({
-      title: `${icon} New Video from ${channelLabel}`,
+      titleTextDisplay: `${icon} New Video from ${channelLabel}`,
       markdownContent: notificationMessage,
       description: `**${video.title}**\n\n${description}`,
       components,

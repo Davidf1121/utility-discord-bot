@@ -34,6 +34,7 @@ export default {
     if (style === 'v2') {
       messagePayload = ComponentBuilder.buildV2Message({
         title: '🎤 Temporary Voice Channels',
+        separator: true,
         description: customMessage || 'Click the button below to create your own temporary voice channel!\n\n' +
                     '**How it works**\n' +
                     '1. Click "Create Channel"\n2. Customize your channel\n3. Your channel is created!\n4. It auto-deletes when empty\n\n' +

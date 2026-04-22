@@ -90,6 +90,15 @@ export default {
               { name: 'Rich Embed (Default)', value: 'embed' },
               { name: 'Simple Text', value: 'simple' }
             )))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('set-apikey')
+        .setDescription('Set the YouTube Data API key for community posts and faster updates')
+        .addStringOption(option =>
+          option
+            .setName('key')
+            .setDescription('Your YouTube Data API v3 key')
+            .setRequired(true)))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   
   async execute(interaction) {
@@ -120,6 +129,8 @@ export default {
         return handleSetStyle(interaction, manager);
       case 'toggle':
         return handleToggle(interaction, manager);
+      case 'set-apikey':
+        return handleSetApiKey(interaction, manager);
       case 'test-youtube':
         return handleTestYouTube(interaction, manager);
       case 'test-tiktok':
@@ -127,6 +138,33 @@ export default {
     }
   }
 };
+
+async function handleSetApiKey(interaction, manager) {
+  const key = interaction.options.getString('key');
+  
+  // Basic validation of the key format
+  if (!key || key.length < 30) {
+    return interaction.reply({
+      content: '❌ Invalid YouTube API key format. Please provide a valid API key from Google Cloud Console.',
+      ephemeral: true
+    });
+  }
+
+  const youtubeConfig = { ...manager.config.videoNotifier.youtube, youtubeApiKey: key };
+  const result = await manager.updateConfig({ youtube: youtubeConfig });
+  
+  if (result.success) {
+    await interaction.reply({
+      content: '✅ YouTube API key has been set! The bot will now use the YouTube Data API for faster updates and community posts.',
+      ephemeral: true
+    });
+  } else {
+    await interaction.reply({
+      content: `❌ ${result.message}`,
+      ephemeral: true
+    });
+  }
+}
 
 async function handleTestYouTube(interaction, manager) {
   try {

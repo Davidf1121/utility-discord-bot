@@ -98,7 +98,8 @@
     "tiktokNotificationChannelId": "",
     "youtube": {
       "enabled": true,
-      "channels": []
+      "channels": [],
+      "youtubeApiKey": ""
     },
     "tiktok": {
       "enabled": true,

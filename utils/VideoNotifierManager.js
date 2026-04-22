@@ -21,6 +21,7 @@ export class VideoNotifierManager {
       }
     });
     this.lastVideos = new Map();
+    this.lastCommunityPosts = new Map();
     this.pollingInterval = null;
   }
 
@@ -62,36 +63,181 @@ export class VideoNotifierManager {
 
   async checkYouTubeChannels() {
     const channels = this.config.videoNotifier.youtube.channels || [];
-    
+    const apiKey = this.config.videoNotifier.youtube.youtubeApiKey;
+
     for (const channelConfig of channels) {
-      try {
-        const { channelId, label } = channelConfig;
-        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-        
-        this.logger.debug(`Checking YouTube channel: ${label || channelId}`);
-        
-        const feed = await this.parser.parseURL(rssUrl);
-        const channelName = label || feed.title || channelId;
-        
-        if (feed.items && feed.items.length > 0) {
-          const latestVideo = feed.items[0];
-          const videoId = this.extractYouTubeVideoId(latestVideo.link);
-          
-          if (videoId) {
-            const lastKnownId = this.lastVideos.get(`youtube:${channelId}`);
-            
-            if (lastKnownId !== videoId) {
-              this.logger.info(`New video detected from ${channelName}: ${latestVideo.title}`);
-              await this.sendVideoNotification(latestVideo, 'youtube', channelName);
-              this.lastVideos.set(`youtube:${channelId}`, videoId);
-            } else {
-              this.logger.debug(`No new videos from ${channelName}`);
-            }
+      if (apiKey) {
+        await this.checkYouTubeViaApi(channelConfig, apiKey);
+      } else {
+        await this.checkYouTubeViaRss(channelConfig);
+      }
+    }
+  }
+
+  async checkYouTubeViaRss(channelConfig) {
+    try {
+      const { channelId, label } = channelConfig;
+      const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+
+      this.logger.debug(`Checking YouTube channel via RSS: ${label || channelId}`);
+
+      const feed = await this.parser.parseURL(rssUrl);
+      const channelName = label || feed.title || channelId;
+
+      if (feed.items && feed.items.length > 0) {
+        const latestVideo = feed.items[0];
+        const videoId = this.extractYouTubeVideoId(latestVideo.link);
+
+        if (videoId) {
+          const lastKnownId = this.lastVideos.get(`youtube:${channelId}`);
+
+          if (lastKnownId !== videoId) {
+            this.logger.info(`New video detected from ${channelName}: ${latestVideo.title}`);
+            await this.sendVideoNotification(latestVideo, 'youtube', channelName);
+            this.lastVideos.set(`youtube:${channelId}`, videoId);
+          } else {
+            this.logger.debug(`No new videos from ${channelName}`);
           }
         }
-      } catch (error) {
-        this.logger.error(`Error checking YouTube channel ${channelConfig.channelId}:`, error.message);
       }
+    } catch (error) {
+      this.logger.error(`Error checking YouTube channel ${channelConfig.channelId} via RSS:`, error.message);
+    }
+  }
+
+  async checkYouTubeViaApi(channelConfig, apiKey) {
+    const { channelId, label } = channelConfig;
+    this.logger.debug(`Checking YouTube channel via API: ${label || channelId}`);
+
+    try {
+      // 1. Check for new videos
+      await this.checkYouTubeVideosApi(channelConfig, apiKey);
+      
+      // 2. Check for new community posts
+      await this.checkYouTubeCommunityPostsApi(channelConfig, apiKey);
+    } catch (error) {
+      this.logger.error(`Error checking YouTube channel ${channelId} via API:`, error.message);
+    }
+  }
+
+  async checkYouTubeVideosApi(channelConfig, apiKey) {
+    const { channelId, label } = channelConfig;
+    
+    // First, we need the uploads playlist ID
+    // Note: Usually it's the channel ID with 'UU' instead of 'UC'
+    const uploadsPlaylistId = 'UU' + channelId.substring(2);
+    
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=1&key=${apiKey}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`YouTube API error: ${errorData.error?.message || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    if (data.items && data.items.length > 0) {
+      const item = data.items[0];
+      const videoId = item.snippet.resourceId.videoId;
+      const title = item.snippet.title;
+      const channelName = label || item.snippet.channelTitle || channelId;
+      
+      const lastKnownId = this.lastVideos.get(`youtube:${channelId}`);
+      
+      if (lastKnownId !== videoId) {
+        this.logger.info(`New video detected via API from ${channelName}: ${title}`);
+        
+        // Map API response to the format expected by sendVideoNotification
+        const video = {
+          title,
+          link: `https://www.youtube.com/watch?v=${videoId}`,
+          pubDate: item.snippet.publishedAt,
+          contentSnippet: item.snippet.description,
+          videoId
+        };
+        
+        await this.sendVideoNotification(video, 'youtube', channelName);
+        this.lastVideos.set(`youtube:${channelId}`, videoId);
+      }
+    }
+  }
+
+  async checkYouTubeCommunityPostsApi(channelConfig, apiKey) {
+    const { channelId, label } = channelConfig;
+    
+    // Using activities endpoint to find community posts (bulletins)
+    const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=${channelId}&maxResults=5&key=${apiKey}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`YouTube API activities error: ${errorData.error?.message || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    if (data.items && data.items.length > 0) {
+      // Find the latest community post (bulletin)
+      const communityPost = data.items.find(item => item.snippet.type === 'bulletin');
+      
+      if (communityPost) {
+        const postId = communityPost.id;
+        const lastKnownPostId = this.lastCommunityPosts.get(`youtube:community:${channelId}`);
+        
+        if (lastKnownPostId !== postId) {
+          const channelName = label || communityPost.snippet.channelTitle || channelId;
+          this.logger.info(`New community post detected from ${channelName}`);
+          
+          await this.sendCommunityPostNotification(communityPost, channelName);
+          this.lastCommunityPosts.set(`youtube:community:${channelId}`, postId);
+        }
+      }
+    }
+  }
+
+  async sendCommunityPostNotification(post, channelLabel) {
+    const channelId = this.config.videoNotifier.notificationChannelId;
+    
+    if (!channelId) {
+      this.logger.warn('No notification channel configured, skipping community post notification');
+      return;
+    }
+
+    const channel = this.client.channels.cache.get(channelId);
+    if (!channel) {
+      this.logger.warn(`Notification channel not found: ${channelId}`);
+      return;
+    }
+
+    const style = getMessageStyle(this.config, 'videoNotifier');
+    const embedColor = this.config.embedColors.videoNotifier || this.config.embedColors.primary;
+    const content = post.snippet.description || post.snippet.title || 'New community post';
+    const postUrl = `https://www.youtube.com/channel/${post.snippet.channelId}/community`;
+
+    try {
+      if (style === 'simple') {
+        const message = `📢 **New Community Post from ${channelLabel}!**\n\n${content}\n\n${postUrl}`;
+        await channel.send({ content: message });
+      } else {
+        const embed = new EmbedBuilder()
+          .setColor(embedColor)
+          .setAuthor({
+            name: `${channelLabel} (Community Post)`,
+            iconURL: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png',
+            url: postUrl
+          })
+          .setDescription(content.length > 2048 ? content.substring(0, 2045) + '...' : content)
+          .setURL(postUrl)
+          .setTimestamp(new Date(post.snippet.publishedAt))
+          .setFooter({
+            text: 'YouTube Community',
+            iconURL: 'https://www.youtube.com/favicon.ico'
+          });
+
+        await channel.send({ embeds: [embed] });
+      }
+      this.logger.info(`Sent community post notification for ${channelLabel}`);
+    } catch (error) {
+      this.logger.error('Error sending community post notification:', error);
     }
   }
 

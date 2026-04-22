@@ -19,6 +19,7 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
   - `tiktokNotificationChannelId`: Separate channel for TikTok notifications (optional)
   - `youtube.enabled`: Enable YouTube monitoring
   - `youtube.channels`: Array of YouTube channels to monitor
+  - `youtube.youtubeApiKey`: (Optional) YouTube Data API v3 key for community posts and faster updates
   - `tiktok.enabled`: Enable TikTok monitoring
   - `tiktok.channels`: Array of TikTok channels to monitor
   - `embedSettings.includeDescription`: Include video description in embed
@@ -53,13 +54,23 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
   - `add-tiktok`: Add a TikTok channel (requires username, optional label)
   - `remove-tiktok`: Remove a TikTok channel
   - `set-channel`: Set Discord notification channel
+  - `set-apikey`: Set YouTube Data API key (Optional)
   - `toggle`: Toggle video notifier on/off
   - `test-youtube`: Send a test YouTube notification
   - `test-tiktok`: Send a test TikTok notification
 - Requires Administrator permission
 - Provides rich embed responses
 
-### 7. `README.md`
+### 7. YouTube Data API Integration (NEW)
+- Optional integration with YouTube Data API v3
+- Provides support for:
+  - YouTube Community Posts detection
+  - Faster and more reliable video updates
+  - Bypassing some RSS feed limitations
+- Configurable via `/videonotifier set-apikey`
+- Falls back to RSS if no API key is provided
+
+### 8. `README.md`
 - Updated features list
 - Added Video Notifier section with setup instructions
 - Updated commands table with test commands
@@ -94,10 +105,17 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
 - Handles timeouts gracefully (10 second timeout)
 - Supports both YouTube channel IDs and TikTok usernames
 
+### YouTube Data API Integration
+- Uses `activities` endpoint for community post detection
+- Uses `playlistItems` endpoint for upload detection (highly efficient)
+- Detects `bulletin` type activities as community posts
+- Separate tracking for videos and community posts to prevent duplicate notifications
+
 ### Duplicate Prevention
 - Tracks last known video ID per channel in memory Map
-- Only sends notifications when new video ID is detected
-- Differentiates by platform (youtube:channelId, tiktok:username)
+- Tracks last known community post ID per channel in memory Map
+- Only sends notifications when new ID is detected
+- Differentiates by platform (youtube:channelId, youtube:community:channelId, tiktok:username)
 
 ### Discord Embeds
 - YouTube embeds include:
@@ -131,16 +149,17 @@ Implemented a YouTube/TikTok upload notifier feature that monitors channels and 
 
 ## Benefits
 
-1. **No API Keys Required**: Uses public RSS feeds
-2. **Easy to Use**: Simple slash commands for management
-3. **Test Commands**: Verify setup with test notifications
-4. **Configurable**: Adjust check interval, embed settings, etc.
-5. **Duplicate Prevention**: Tracks last video to avoid spam
-6. **Rich Notifications**: Beautiful embeds with thumbnails (YouTube)
-7. **Multi-Platform**: Supports both YouTube and TikTok
-8. **Admin Control**: Requires admin permissions to manage
-9. **Non-Intrusive**: Only notifies when NEW content is posted
-10. **Separate Channels**: Optional separate channels for YouTube and TikTok
+1. **No API Keys Required**: Default uses public RSS feeds
+2. **Optional YouTube Data API**: Enhanced support for community posts and reliability
+3. **Easy to Use**: Simple slash commands for management
+4. **Test Commands**: Verify setup with test notifications
+5. **Configurable**: Adjust check interval, embed settings, etc.
+6. **Duplicate Prevention**: Tracks last video/post to avoid spam
+7. **Rich Notifications**: Beautiful embeds with thumbnails (YouTube)
+8. **Multi-Platform**: Supports both YouTube and TikTok
+9. **Admin Control**: Requires admin permissions to manage
+10. **Non-Intrusive**: Only notifies when NEW content is posted
+11. **Separate Channels**: Optional separate channels for YouTube and TikTok
 
 ## Future Enhancements (Optional)
 

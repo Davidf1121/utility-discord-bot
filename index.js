@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
 import { readFileSync } from 'fs';
-import { loadConfig, loadConfigWithUpgrade, reloadConfig, configPath } from './utils/ConfigLoader.js';
+import { loadConfig, loadConfigWithUpgrade, reloadConfig, configPath, saveConfig } from './utils/ConfigLoader.js';
 import { createLogger, setLogConfig } from './utils/Logger.js';
 import { TempChannelManager } from './utils/TempChannelManager.js';
 
@@ -169,18 +169,25 @@ async function deployCommands() {
       }
     }
     
-    if (config.clientId && config.guildId) {
+    const guildIds = Array.isArray(config.guildId) ? config.guildId : (config.guildId ? [config.guildId] : []);
+    
+    if (config.clientId && guildIds.length > 0) {
       const rest = new REST().setToken(process.env.DISCORD_TOKEN);
       
       try {
-        logger.info(`Started refreshing ${commands.length} application (/) commands.`);
+        logger.info(`Started refreshing ${commands.length} application (/) commands for ${guildIds.length} guild(s).`);
         
-        await rest.put(
-          Routes.applicationGuildCommands(config.clientId, config.guildId),
-          { body: commands }
-        );
-        
-        logger.info(`Successfully reloaded ${commands.length} application (/) commands.`);
+        for (const guildId of guildIds) {
+          try {
+            await rest.put(
+              Routes.applicationGuildCommands(config.clientId, guildId),
+              { body: commands }
+            );
+            logger.info(`Successfully reloaded commands for guild: ${guildId}`);
+          } catch (error) {
+            logger.error(`Error deploying commands to guild ${guildId}:`, error);
+          }
+        }
       } catch (error) {
         logger.error('Error deploying commands:', error);
       }
@@ -200,7 +207,55 @@ async function main() {
 
   await loadEvents();
   await loadComponents();
+  
+  // Try to deploy commands if IDs are already set
   await deployCommands();
+
+  client.once('ready', async () => {
+    let configChanged = false;
+
+    if (!config.clientId && client.application?.id) {
+      config.clientId = client.application.id;
+      logger.info(`Auto-detected Client ID: ${config.clientId}`);
+      configChanged = true;
+    }
+
+    const guilds = client.guilds.cache.map(g => g.id);
+    if (!Array.isArray(config.guildId)) {
+      config.guildId = config.guildId ? [config.guildId] : [];
+    }
+
+    for (const guildId of guilds) {
+      if (!config.guildId.includes(guildId)) {
+        config.guildId.push(guildId);
+        configChanged = true;
+      }
+    }
+
+    if (configChanged) {
+      saveConfig(config);
+      updateConfigManagers(config);
+      logger.info('Updated config with auto-detected IDs');
+      // Re-deploy commands if we just found new IDs
+      await deployCommands();
+    }
+  });
+
+  client.on('guildCreate', async (guild) => {
+    logger.info(`Joined new guild: ${guild.name} (${guild.id})`);
+
+    if (!Array.isArray(config.guildId)) {
+      config.guildId = config.guildId ? [config.guildId] : [];
+    }
+
+    if (!config.guildId.includes(guild.id)) {
+      config.guildId.push(guild.id);
+      saveConfig(config);
+      updateConfigManagers(config);
+      logger.info(`Added guild ${guild.id} to config and saved.`);
+      await deployCommands();
+    }
+  });
 
   startAutoReload();
 

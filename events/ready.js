@@ -7,7 +7,11 @@ export default {
   once: true,
   execute(client) {
     logger.info(`Logged in as ${client.user.tag}`);
-    logger.info(`Ready to serve ${client.guilds.cache.size} guilds`);
+    logger.info(`Client ID: ${client.user.id}`);
+    logger.info(`Ready to serve ${client.guilds.cache.size} guilds:`);
+    client.guilds.cache.forEach(guild => {
+      logger.info(` - ${guild.name} (${guild.id})`);
+    });
     
     client.user.setActivity('Managing voice channels', { type: 'WATCHING' });
 

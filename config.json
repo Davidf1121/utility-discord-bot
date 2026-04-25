@@ -1,7 +1,8 @@
 {
   "prefix": "!",
   "clientId": "",
-  "guildId": "",
+  "guildId": [],
+  "_comment_ids": "clientId and guildId will be auto-detected if left empty. guildId can be a string or an array of strings.",
   "controlChannelId": "",
   "voiceCategoryId": "",
   "messageStyle": "embed",

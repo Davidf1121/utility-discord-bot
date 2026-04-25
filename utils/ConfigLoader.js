@@ -19,7 +19,13 @@ export function loadConfig() {
     
     // Ensure all Discord IDs are strings to avoid precision issues
     if (config.clientId) config.clientId = String(config.clientId);
-    if (config.guildId) config.guildId = String(config.guildId);
+    if (config.guildId) {
+      if (Array.isArray(config.guildId)) {
+        config.guildId = config.guildId.map(id => String(id));
+      } else {
+        config.guildId = String(config.guildId);
+      }
+    }
     if (config.controlChannelId) config.controlChannelId = String(config.controlChannelId);
     if (config.voiceCategoryId) config.voiceCategoryId = String(config.voiceCategoryId);
     
@@ -86,7 +92,13 @@ export function saveConfig(config) {
   try {
     // Ensure all Discord IDs are strings before saving
     if (config.clientId) config.clientId = String(config.clientId);
-    if (config.guildId) config.guildId = String(config.guildId);
+    if (config.guildId) {
+      if (Array.isArray(config.guildId)) {
+        config.guildId = config.guildId.map(id => String(id));
+      } else {
+        config.guildId = String(config.guildId);
+      }
+    }
     if (config.controlChannelId) config.controlChannelId = String(config.controlChannelId);
     if (config.voiceCategoryId) config.voiceCategoryId = String(config.voiceCategoryId);
     

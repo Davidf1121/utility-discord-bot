@@ -166,7 +166,7 @@ export class VideoNotifierManager {
     const { channelId, label } = channelConfig;
     
     // Using activities endpoint to find community posts (bulletins)
-    const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=${channelId}&maxResults=5&key=${apiKey}`;
+    const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=${channelId}&maxResults=10&key=${apiKey}`;
     
     const response = await fetch(url);
     if (!response.ok) {
@@ -175,9 +175,23 @@ export class VideoNotifierManager {
     }
     
     const data = await response.json();
+
+    // Log the full API response structure on first run for this channel to help debug
+    if (!this.lastCommunityPosts.has(`youtube:community:${channelId}`)) {
+      this.logger.debug(`First API response for channel ${channelId}: ${JSON.stringify(data, null, 2)}`);
+    }
+
     if (data.items && data.items.length > 0) {
-      // Find the latest community post (bulletin)
-      const communityPost = data.items.find(item => item.snippet.type === 'bulletin');
+      // Log what activity types are found
+      const types = data.items.map(item => item.snippet?.type).filter(Boolean);
+      this.logger.debug(`YouTube activities found for ${label || channelId}: ${[...new Set(types)].join(', ')}`);
+
+      // Find the latest community post
+      const communityPost = data.items.find(item => 
+        item.snippet.type === 'bulletin' || 
+        item.snippet.type === 'communityPost' ||
+        item.contentDetails?.bulletin
+      );
       
       if (communityPost) {
         const postId = communityPost.id;
@@ -210,7 +224,13 @@ export class VideoNotifierManager {
 
     const style = getMessageStyle(this.config, 'videoNotifier');
     const embedColor = this.config.embedColors.videoNotifier || this.config.embedColors.primary;
-    const content = post.snippet.description || post.snippet.title || 'New community post';
+    
+    // Get post content from various possible fields
+    const content = post.snippet.description || 
+                   post.contentDetails?.bulletin?.message ||
+                   post.snippet.title ||
+                   'New community post';
+                   
     const postUrl = `https://www.youtube.com/channel/${post.snippet.channelId}/community`;
 
     try {

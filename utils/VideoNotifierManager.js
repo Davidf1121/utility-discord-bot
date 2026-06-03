@@ -486,6 +486,34 @@ export class VideoNotifierManager {
       };
     }
 
+    const apiKey = this.config.videoNotifier?.youtube?.youtubeApiKey;
+    if (apiKey) {
+      this.logger.debug(`Validating YouTube channel via API: ${channelId}`);
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/channels?id=${channelId}&part=snippet&key=${apiKey}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.items && data.items.length > 0) {
+            const item = data.items[0];
+            return {
+              success: true,
+              message: 'Channel validated successfully via YouTube API',
+              validatedVia: 'api',
+              channelInfo: {
+                title: item.snippet.title,
+                link: `https://www.youtube.com/channel/${channelId}`,
+                latestVideo: null // API validation for channel doesn't easily give latest video in one call
+              }
+            };
+          }
+        }
+        this.logger.warn(`YouTube API validation failed for ${channelId}, falling back to RSS`);
+      } catch (error) {
+        this.logger.error(`Error validating YouTube channel ${channelId} via API:`, error.message);
+      }
+    }
+
     try {
       const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
       this.logger.debug(`Validating YouTube channel via RSS: ${rssUrl}`);
@@ -515,6 +543,7 @@ export class VideoNotifierManager {
       return {
         success: true,
         message: 'Channel validated successfully',
+        validatedVia: 'rss',
         channelInfo
       };
     } catch (error) {
@@ -667,7 +696,7 @@ export class VideoNotifierManager {
     return saveConfig(this.config);
   }
 
-  async addYouTubeChannel(channelId, label) {
+  async addYouTubeChannel(channelId, label, validatedVia = 'rss') {
     if (!this.config.videoNotifier.youtube.channels) {
       this.config.videoNotifier.youtube.channels = [];
     }
@@ -687,9 +716,13 @@ export class VideoNotifierManager {
       return { success: false, message: 'Channel already exists' };
     }
     
-    this.config.videoNotifier.youtube.channels.push({ channelId, label });
+    this.config.videoNotifier.youtube.channels.push({ channelId, label, validatedVia });
     await this.persistConfig();
     return { success: true, message: 'YouTube channel added and config saved' };
+  }
+
+  async addYouTubeChannelForce(channelId, label) {
+    return this.addYouTubeChannel(channelId, label, 'force');
   }
 
   async removeYouTubeChannel(channelId) {
@@ -753,7 +786,8 @@ export class VideoNotifierManager {
     return {
       youtube: youtube.map(c => ({
         id: c.channelId,
-        label: c.label
+        label: c.label,
+        validatedVia: c.validatedVia
       })),
       tiktok: tiktok.map(c => ({
         username: c.username,

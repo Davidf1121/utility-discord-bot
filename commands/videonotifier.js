@@ -23,6 +23,19 @@ export default {
             .setDescription('Custom label for the channel')))
     .addSubcommand(subcommand =>
       subcommand
+        .setName('add-youtube-force')
+        .setDescription('Add a YouTube channel to monitor without RSS validation')
+        .addStringOption(option =>
+          option
+            .setName('channel-id')
+            .setDescription('The YouTube channel ID')
+            .setRequired(true))
+        .addStringOption(option =>
+          option
+            .setName('label')
+            .setDescription('Custom label for the channel')))
+    .addSubcommand(subcommand =>
+      subcommand
         .setName('remove-youtube')
         .setDescription('Remove a YouTube channel from monitoring')
         .addStringOption(option =>
@@ -117,6 +130,8 @@ export default {
         return handleList(interaction, manager);
       case 'add-youtube':
         return handleAddYouTube(interaction, manager);
+      case 'add-youtube-force':
+        return handleAddYouTubeForce(interaction, manager);
       case 'remove-youtube':
         return handleRemoveYouTube(interaction, manager);
       case 'add-tiktok':
@@ -190,7 +205,12 @@ async function handleList(interaction, manager) {
   const channels = manager.listChannels();
   
   const youtubeList = channels.youtube.length > 0
-    ? channels.youtube.map(c => `• ${c.label || c.id} (${c.id})`).join('\n')
+    ? channels.youtube.map(c => {
+        let suffix = '';
+        if (c.validatedVia === 'force') suffix = ' (⚠️ Forced)';
+        else if (c.validatedVia === 'api') suffix = ' (✅ API)';
+        return `• ${c.label || c.id} (${c.id})${suffix}`;
+      }).join('\n')
     : 'None';
   
   const tiktokList = channels.tiktok.length > 0
@@ -273,7 +293,7 @@ async function handleAddYouTube(interaction, manager) {
   }
 
   // Step 2: Add the channel after successful validation
-  const result = await manager.addYouTubeChannel(channelId, label);
+  const result = await manager.addYouTubeChannel(channelId, label, validation.validatedVia);
 
   if (result.success) {
     const channelInfo = validation.channelInfo;
@@ -318,6 +338,51 @@ async function handleAddYouTube(interaction, manager) {
     const embed = {
       color: manager.config.embedColors.error,
       title: '❌ Failed to Add Channel',
+      thumbnail: {
+        url: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+      },
+      fields: [
+        { name: 'Channel ID', value: `\`${channelId}\``, inline: false },
+        { name: '❌ Error', value: result.message, inline: false }
+      ],
+      timestamp: new Date()
+    };
+    return interaction.editReply({ embeds: [embed] });
+  }
+}
+
+async function handleAddYouTubeForce(interaction, manager) {
+  const channelId = interaction.options.getString('channel-id');
+  const label = interaction.options.getString('label');
+
+  await interaction.deferReply({ ephemeral: true });
+
+  const result = await manager.addYouTubeChannelForce(channelId, label);
+
+  if (result.success) {
+    const embed = {
+      color: manager.config.embedColors.success,
+      title: '✅ YouTube Channel Force-Added',
+      thumbnail: {
+        url: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+      },
+      fields: [
+        { name: '🆔 Channel ID', value: `\`${channelId}\``, inline: true },
+        { name: '🏷️ Label', value: label || 'None', inline: true },
+        { name: '⚠️ Note', value: 'Validation was skipped. The bot will try to fetch the latest video during the next check.', inline: false }
+      ],
+      timestamp: new Date(),
+      footer: {
+        text: 'YouTube (Force-Added)',
+        iconURL: 'https://www.youtube.com/favicon.ico'
+      }
+    };
+
+    return interaction.editReply({ embeds: [embed] });
+  } else {
+    const embed = {
+      color: manager.config.embedColors.error,
+      title: '❌ Failed to Force-Add Channel',
       thumbnail: {
         url: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
       },

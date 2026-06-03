@@ -4,7 +4,7 @@
 
 ## Overview
 
-The Video Notifier monitors YouTube and TikTok channels for new uploads and sends rich embedded notifications to a specified Discord channel. It supports community posts via the optional YouTube Data API v3, and falls back to RSS feeds when no API key is configured.
+The Video Notifier monitors YouTube and TikTok channels for new uploads and sends rich embedded notifications to a specified Discord channel. It supports community posts via either the YouTube Data API v3 or a built-in scraper (`youtubei.js`), and falls back to RSS feeds for video uploads when no API key is configured.
 
 ---
 
@@ -117,6 +117,7 @@ The video notifier feature is configured in `config.json` under the `videoNotifi
 | `youtube.enabled` | boolean | `true` | Enable/disable YouTube monitoring independently |
 | `youtube.channels` | array | `[]` | Array of YouTube channel objects to monitor (see [Adding Channels](#adding-channels)) |
 | `youtube.youtubeApiKey` | string | `""` | Your YouTube Data API v3 key (see [How to Get One](#how-to-get-youtube-data-api-key)) |
+| `youtube.useYoutubeiForCommunity` | boolean | `true` | Whether to use `youtubei.js` scraper for community posts when no API key is set |
 | `tiktok.enabled` | boolean | `true` | Enable/disable TikTok monitoring independently |
 | `tiktok.channels` | array | `[]` | Array of TikTok channel objects to monitor |
 | `notificationStyle` | string | `"embed"` | Notification format (`"embed"` or `"text"`) |
@@ -142,7 +143,7 @@ You can also set it at runtime using the `/videonotifier set-apikey` command wit
 | Scenario | RSS Only (no API key) | With YouTube Data API Key |
 |----------|-----------------------|---------------------------|
 | **Video detection** | ✅ Works (RSS feed polling) | ✅ Works faster and more reliably |
-| **Community posts** | ❌ Not detected | ✅ Detected as `bulletin` activities |
+| **Community posts** | ✅ Works (via `youtubei.js` scraper) | ✅ Detected as `bulletin` activities |
 | **Update speed** | Slower (RSS polling delay) | Faster (API playlistItems endpoint) |
 | **Quota limits** | None (free, no API key) | 10,000 units/day free tier |
 
@@ -151,7 +152,7 @@ You can also set it at runtime using the `/videonotifier set-apikey` command wit
 The bot distinguishes between two types of content from YouTube channels:
 
 - **Videos** — Standard uploads detected via RSS feed or the `playlistItems` API endpoint
-- **Community Posts** — Text/image posts on a channel's Community tab. These are **only** detected when a YouTube Data API key is configured, using the `activities` endpoint with `type=bulletin`
+- **Community Posts** — Text/image posts on a channel's Community tab. These are detected when either a YouTube Data API key is configured or using the built-in scraper (`youtubei.js`).
 
 Both types are tracked separately to prevent duplicate notifications.
 
@@ -480,17 +481,18 @@ If you've added your API key but the bot isn't detecting community posts or is s
 
 ## Benefits
 
-1. **No API Keys Required**: Default uses public RSS feeds
-2. **Optional YouTube Data API**: Enhanced support for community posts and reliability
-3. **Easy to Use**: Simple slash commands for management
-4. **Test Commands**: Verify setup with test notifications
-5. **Configurable**: Adjust check interval, embed settings, etc.
-6. **Duplicate Prevention**: Tracks last video/post to avoid spam
-7. **Rich Notifications**: Beautiful embeds with thumbnails (YouTube)
-8. **Multi-Platform**: Supports both YouTube and TikTok
-9. **Admin Control**: Requires admin permissions to manage
-10. **Non-Intrusive**: Only notifies when NEW content is posted
-11. **Separate Channels**: Optional separate channels for YouTube and TikTok
+1. **Free Community Posts**: Detects YouTube community posts without needing an API key via `youtubei.js`
+2. **No API Keys Required for Videos**: Uses public RSS feeds by default
+3. **Optional YouTube Data API**: Enhanced reliability and performance
+4. **Easy to Use**: Simple slash commands for management
+5. **Test Commands**: Verify setup with test notifications
+6. **Configurable**: Adjust check interval, embed settings, etc.
+7. **Duplicate Prevention**: Tracks last video/post to avoid spam
+8. **Rich Notifications**: Beautiful embeds with thumbnails (YouTube)
+9. **Multi-Platform**: Supports both YouTube and TikTok
+10. **Admin Control**: Requires admin permissions to manage
+11. **Non-Intrusive**: Only notifies when NEW content is posted
+12. **Separate Channels**: Optional separate channels for YouTube and TikTok
 
 ---
 

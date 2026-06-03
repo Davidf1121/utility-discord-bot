@@ -100,7 +100,8 @@
     "youtube": {
       "enabled": true,
       "channels": [],
-      "youtubeApiKey": ""
+      "youtubeApiKey": "",
+      "useYoutubeiForCommunity": true
     },
     "tiktok": {
       "enabled": true,

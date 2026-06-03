@@ -3,6 +3,7 @@ import { EmbedBuilder } from 'discord.js';
 import Parser from 'rss-parser';
 import { saveConfig, getDefaultThumbnail, getMessageStyle } from './ConfigLoader.js';
 import { ComponentBuilder } from './ComponentBuilder.js';
+import { YouTubeHelper } from './YouTubeHelper.js';
 
 export class VideoNotifierManager {
   constructor(client, config, configPath = null) {
@@ -23,6 +24,7 @@ export class VideoNotifierManager {
     this.lastVideos = new Map();
     this.lastCommunityPosts = new Map();
     this.pollingInterval = null;
+    this.youtubeHelper = new YouTubeHelper();
   }
 
   start() {
@@ -64,13 +66,50 @@ export class VideoNotifierManager {
   async checkYouTubeChannels() {
     const channels = this.config.videoNotifier.youtube.channels || [];
     const apiKey = this.config.videoNotifier.youtube.youtubeApiKey;
+    const useYoutubei = this.config.videoNotifier.youtube.useYoutubeiForCommunity !== false;
 
     for (const channelConfig of channels) {
       if (apiKey) {
         await this.checkYouTubeViaApi(channelConfig, apiKey);
       } else {
         await this.checkYouTubeViaRss(channelConfig);
+        
+        if (useYoutubei) {
+          await this.checkYouTubeCommunityPostsViaYoutubei(channelConfig);
+        }
       }
+    }
+  }
+
+  async checkYouTubeCommunityPostsViaYoutubei(channelConfig) {
+    const { channelId, label } = channelConfig;
+    this.logger.debug(`Checking YouTube community posts via youtubei.js: ${label || channelId}`);
+
+    try {
+      const posts = await this.youtubeHelper.getCommunityPosts(channelId);
+      
+      if (posts && posts.length > 0) {
+        // We only care about the latest one
+        const latestPost = posts[0];
+        const postId = latestPost.id;
+        const lastKnownPostId = this.lastCommunityPosts.get(`youtube:community:${channelId}`);
+
+        if (lastKnownPostId !== postId) {
+          const channelName = label || latestPost.snippet.channelTitle || channelId;
+          
+          // Avoid spam on first run if Map is empty
+          const isFirstRun = !this.lastCommunityPosts.has(`youtube:community:${channelId}`);
+          
+          if (!isFirstRun) {
+            this.logger.info(`New community post detected via youtubei.js from ${channelName}`);
+            await this.sendCommunityPostNotification(latestPost, channelName);
+          }
+          
+          this.lastCommunityPosts.set(`youtube:community:${channelId}`, postId);
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Error checking community posts via youtubei.js for ${channelId}:`, error.message);
     }
   }
 

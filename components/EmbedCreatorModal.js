@@ -8,28 +8,24 @@ async function updatePreview(interaction) {
   const state = interaction.client.embedCreatorManager.getOrCreateState(userId);
   const targetChannel = interaction.client.channels.cache.get(state.targetChannelId);
 
-  let separatorList = '';
-  if (state.v2.separators && state.v2.separators.length > 0) {
-    separatorList = `\n**Separators after indices:** ${state.v2.separators.join(', ')}`;
-  }
+  const components = state.v2.components || [];
+  const textCount = components.filter(c => c.type === 'text').length;
+  const buttonCount = components.filter(c => c.type === 'button').length;
+  const sepCount = components.filter(c => c.type === 'separator').length;
+  const labelCount = components.filter(c => c.type === 'label').length;
+  const mediaCount = components.reduce((acc, c) => acc + (c.type === 'mediaGallery' ? c.items.length : 0), 0);
+  const hasThumbnail = components.some(c => c.type === 'thumbnail');
 
-  let labelList = '';
-  if (state.v2.labels && state.v2.labels.length > 0) {
-    labelList = `\n**Labels:** ${state.v2.labels.join(', ')}`;
-  }
-
-  let galleryInfo = '';
-  if (state.v2.mediaGallery && state.v2.mediaGallery.length > 0) {
-    galleryInfo = `\n**Gallery Items:** ${state.v2.mediaGallery.length}`;
-  }
-
-  let thumbnailInfo = '';
-  if (state.v2.thumbnail && state.v2.thumbnail.length > 0) {
-    thumbnailInfo = `\n**Thumbnail:** ✅ Set`;
-  }
+  let stats = `\n**Components:** ${components.length}`;
+  if (textCount > 0) stats += ` | Text: ${textCount}`;
+  if (buttonCount > 0) stats += ` | Buttons: ${buttonCount}`;
+  if (sepCount > 0) stats += ` | Seps: ${sepCount}`;
+  if (labelCount > 0) stats += ` | Labels: ${labelCount}`;
+  if (mediaCount > 0) stats += ` | Gallery: ${mediaCount}`;
+  if (hasThumbnail) stats += ` | Thumbnail: ✅`;
 
   await interaction.update({
-    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.${separatorList}${labelList}${galleryInfo}${thumbnailInfo}`,
+    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.${stats}`,
     ...message
   });
 }
@@ -112,35 +108,20 @@ const modals = [
     }
   },
   {
-    customId: 'embed_creator_modal_separator',
-    async execute(interaction) {
-      const indexStr = interaction.fields.getTextInputValue('index_input');
-      const index = parseInt(indexStr);
-      
-      if (isNaN(index)) {
-        return interaction.reply({ content: 'Please enter a valid number for the index.', ephemeral: true });
-      }
-
-      const state = interaction.client.embedCreatorManager.getOrCreateState(interaction.user.id);
-      if (index < 0 || index >= state.v2.textDisplays.length) {
-        return interaction.reply({ content: `Invalid index. Please enter a number between 0 and ${state.v2.textDisplays.length - 1}.`, ephemeral: true });
-      }
-
-      if (state.v2.separators.includes(index)) {
-        interaction.client.embedCreatorManager.removeSeparator(interaction.user.id, index);
-      } else {
-        interaction.client.embedCreatorManager.addSeparator(interaction.user.id, index);
-      }
-      await updatePreview(interaction);
-    }
-  },
-  {
     customId: 'embed_creator_modal_button',
     async execute(interaction) {
       const label = interaction.fields.getTextInputValue('button_label');
+      const url = interaction.fields.getTextInputValue('button_url');
       const customId = interaction.fields.getTextInputValue('button_id');
-      
-      interaction.client.embedCreatorManager.addButton(interaction.user.id, { label, customId: customId || undefined });
+      const styleStr = interaction.fields.getTextInputValue('button_style');
+      const style = parseInt(styleStr) || 1;
+
+      interaction.client.embedCreatorManager.addButton(interaction.user.id, {
+        label,
+        url: url || undefined,
+        customId: (url || !customId) ? undefined : customId,
+        style: url ? 5 : style
+      });
       await updatePreview(interaction);
     }
   },

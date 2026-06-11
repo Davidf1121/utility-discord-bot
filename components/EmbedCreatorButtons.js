@@ -9,28 +9,24 @@ async function updatePreview(interaction) {
   const state = interaction.client.embedCreatorManager.getOrCreateState(userId);
   const targetChannel = interaction.client.channels.cache.get(state.targetChannelId);
 
-  let separatorList = '';
-  if (state.v2.separators && state.v2.separators.length > 0) {
-    separatorList = `\n**Separators after indices:** ${state.v2.separators.join(', ')}`;
-  }
+  const components = state.v2.components || [];
+  const textCount = components.filter(c => c.type === 'text').length;
+  const buttonCount = components.filter(c => c.type === 'button').length;
+  const sepCount = components.filter(c => c.type === 'separator').length;
+  const labelCount = components.filter(c => c.type === 'label').length;
+  const mediaCount = components.reduce((acc, c) => acc + (c.type === 'mediaGallery' ? c.items.length : 0), 0);
+  const hasThumbnail = components.some(c => c.type === 'thumbnail');
 
-  let labelList = '';
-  if (state.v2.labels && state.v2.labels.length > 0) {
-    labelList = `\n**Labels:** ${state.v2.labels.join(', ')}`;
-  }
-
-  let galleryInfo = '';
-  if (state.v2.mediaGallery && state.v2.mediaGallery.length > 0) {
-    galleryInfo = `\n**Gallery Items:** ${state.v2.mediaGallery.length}`;
-  }
-
-  let thumbnailInfo = '';
-  if (state.v2.thumbnail && state.v2.thumbnail.length > 0) {
-    thumbnailInfo = `\n**Thumbnail:** ✅ Set`;
-  }
+  let stats = `\n**Components:** ${components.length}`;
+  if (textCount > 0) stats += ` | Text: ${textCount}`;
+  if (buttonCount > 0) stats += ` | Buttons: ${buttonCount}`;
+  if (sepCount > 0) stats += ` | Seps: ${sepCount}`;
+  if (labelCount > 0) stats += ` | Labels: ${labelCount}`;
+  if (mediaCount > 0) stats += ` | Gallery: ${mediaCount}`;
+  if (hasThumbnail) stats += ` | Thumbnail: ✅`;
 
   await interaction.update({
-    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.${separatorList}${labelList}${galleryInfo}${thumbnailInfo}`,
+    content: `### Embed Creator\nYou are creating a message for ${targetChannel || 'unknown channel'}.\nUse the buttons below to customize your message.${stats}`,
     ...message
   });
 }
@@ -80,11 +76,11 @@ const buttons = [
       const state = interaction.client.embedCreatorManager.getOrCreateState(interaction.user.id);
       const modal = new ModalBuilder()
         .setCustomId('embed_creator_modal_color')
-        .setTitle('Set Embed Color');
+        .setTitle('Set Message Color');
 
       const input = new TextInputBuilder()
         .setCustomId('color_input')
-        .setLabel('Color (Hex Code)')
+        .setLabel('Color (Hex) - Also sets V2 Accent Color')
         .setStyle(TextInputStyle.Short)
         .setRequired(false)
         .setPlaceholder('#0099ff')
@@ -143,42 +139,28 @@ const buttons = [
     customId: 'embed_creator_textdisplay_remove',
     async execute(interaction) {
       const state = interaction.client.embedCreatorManager.getOrCreateState(interaction.user.id);
-      if (state.v2.textDisplays.length > 0) {
-        interaction.client.embedCreatorManager.removeTextDisplay(interaction.user.id);
+      if (state.v2.components.length > 0) {
+        interaction.client.embedCreatorManager.removeLastV2Component(interaction.user.id);
         await updatePreview(interaction);
       } else {
-        await interaction.reply({ content: 'No text displays to remove.', ephemeral: true });
+        await interaction.reply({ content: 'No components to remove.', ephemeral: true });
       }
     }
   },
   {
     customId: 'embed_creator_separator_add',
     async execute(interaction) {
-      const state = interaction.client.embedCreatorManager.getOrCreateState(interaction.user.id);
-      if (state.v2.textDisplays.length === 0) {
-        return interaction.reply({ content: 'Add some text displays first before adding separators.', ephemeral: true });
-      }
-
-      const modal = new ModalBuilder()
-        .setCustomId('embed_creator_modal_separator')
-        .setTitle('Add Separator');
-
-      const input = new TextInputBuilder()
-        .setCustomId('index_input')
-        .setLabel(`After Text Index (0 to ${state.v2.textDisplays.length - 1})`)
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true)
-        .setPlaceholder('Enter the index number...');
-
-      modal.addComponents(new ActionRowBuilder().addComponents(input));
-      await interaction.showModal(modal);
+      interaction.client.embedCreatorManager.addSeparator(interaction.user.id);
+      await updatePreview(interaction);
     }
   },
   {
     customId: 'embed_creator_markdown_line',
     async execute(interaction) {
-      interaction.client.embedCreatorManager.toggleMarkdownLine(interaction.user.id);
-      await updatePreview(interaction);
+      // Toggle separator logic was complex before, now we just add one or remove last if it's a separator?
+      // Actually, let's just make it add a separator for now as a shortcut, or keep it as it is if it's just a label.
+      // The button label in createComponents shows the count.
+      await interaction.reply({ content: 'Use "Add Separator" to add a line, or "Remove Last" to remove the last component.', ephemeral: true });
     }
   },
   {
@@ -194,16 +176,32 @@ const buttons = [
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
+      const urlInput = new TextInputBuilder()
+        .setCustomId('button_url')
+        .setLabel('Button URL (Optional)')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false)
+        .setPlaceholder('https://example.com');
+
       const idInput = new TextInputBuilder()
         .setCustomId('button_id')
         .setLabel('Button Custom ID (Optional)')
         .setStyle(TextInputStyle.Short)
         .setRequired(false)
-        .setPlaceholder('my_custom_id');
+        .setPlaceholder('my_custom_id (ignored if URL set)');
+
+      const styleInput = new TextInputBuilder()
+        .setCustomId('button_style')
+        .setLabel('Style (1=Primary, 2=Sec, 3=Success, 4=Danger)')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false)
+        .setPlaceholder('1');
 
       modal.addComponents(
         new ActionRowBuilder().addComponents(labelInput),
-        new ActionRowBuilder().addComponents(idInput)
+        new ActionRowBuilder().addComponents(urlInput),
+        new ActionRowBuilder().addComponents(idInput),
+        new ActionRowBuilder().addComponents(styleInput)
       );
       await interaction.showModal(modal);
     }
@@ -240,8 +238,7 @@ const buttons = [
         .setLabel('Image URL')
         .setStyle(TextInputStyle.Short)
         .setRequired(false)
-        .setPlaceholder('https://example.com/image.png')
-        .setValue(state.v2.thumbnail || '');
+        .setPlaceholder('https://example.com/image.png');
 
       modal.addComponents(new ActionRowBuilder().addComponents(input));
       await interaction.showModal(modal);

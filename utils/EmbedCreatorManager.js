@@ -28,12 +28,7 @@ export class EmbedCreatorManager {
           timestamp: false
         },
         v2: {
-          textDisplays: [],
-          buttons: [],
-          separators: [],
-          labels: [],
-          thumbnail: '',
-          mediaGallery: []
+          components: []
         },
         previewMessageId: null
       });
@@ -58,100 +53,52 @@ export class EmbedCreatorManager {
 
   addTextDisplay(userId, content) {
     const state = this.getOrCreateState(userId);
-    state.v2.textDisplays.push(content);
+    state.v2.components.push({ type: 'text', content });
     return state;
   }
 
-  removeTextDisplay(userId, index) {
+  addSeparator(userId) {
     const state = this.getOrCreateState(userId);
-    let removedIndex;
-    if (index === undefined) {
-      removedIndex = state.v2.textDisplays.length - 1;
-      state.v2.textDisplays.pop();
-    } else {
-      removedIndex = index;
-      state.v2.textDisplays.splice(index, 1);
-    }
-
-    // Update separators
-    state.v2.separators = state.v2.separators
-      .filter(i => i !== removedIndex) // Remove separator at the removed index
-      .map(i => i > removedIndex ? i - 1 : i); // Shift down separators after the removed index
-      
-    return state;
-  }
-
-  addSeparator(userId, afterIndex) {
-    const state = this.getOrCreateState(userId);
-    if (!state.v2.separators.includes(afterIndex)) {
-      state.v2.separators.push(afterIndex);
-      state.v2.separators.sort((a, b) => a - b);
-    }
-    return state;
-  }
-
-  removeSeparator(userId, afterIndex) {
-    const state = this.getOrCreateState(userId);
-    state.v2.separators = state.v2.separators.filter(i => i !== afterIndex);
-    return state;
-  }
-
-  toggleMarkdownLine(userId) {
-    const state = this.getOrCreateState(userId);
-    // For backward compatibility or simple toggle of the last separator
-    const lastIndex = state.v2.textDisplays.length - 1;
-    if (state.v2.separators.includes(lastIndex)) {
-      this.removeSeparator(userId, lastIndex);
-    } else {
-      this.addSeparator(userId, lastIndex);
-    }
+    state.v2.components.push({ type: 'separator' });
     return state;
   }
 
   addButton(userId, buttonData) {
     const state = this.getOrCreateState(userId);
-    state.v2.buttons.push(buttonData);
+    state.v2.components.push({ type: 'button', ...buttonData });
     return state;
   }
 
   addLabel(userId, content) {
     const state = this.getOrCreateState(userId);
-    state.v2.labels.push(content);
-    return state;
-  }
-
-  removeLabel(userId, index) {
-    const state = this.getOrCreateState(userId);
-    if (index === undefined) {
-      state.v2.labels.pop();
-    } else {
-      state.v2.labels.splice(index, 1);
-    }
+    state.v2.components.push({ type: 'label', content });
     return state;
   }
 
   setV2Thumbnail(userId, url) {
     const state = this.getOrCreateState(userId);
-    state.v2.thumbnail = url || '';
+    if (url && url.trim()) {
+      state.v2.components.push({ type: 'thumbnail', src: url.trim() });
+    }
     return state;
   }
 
   addMediaGalleryItem(userId, url) {
     const state = this.getOrCreateState(userId);
-    if (!state.v2.mediaGallery) state.v2.mediaGallery = [];
     if (url && url.trim()) {
-      state.v2.mediaGallery.push({ src: url.trim() });
+      const lastComp = state.v2.components[state.v2.components.length - 1];
+      if (lastComp && lastComp.type === 'mediaGallery') {
+        lastComp.items.push({ src: url.trim() });
+      } else {
+        state.v2.components.push({ type: 'mediaGallery', items: [{ src: url.trim() }] });
+      }
     }
     return state;
   }
 
-  removeMediaGalleryItem(userId, index) {
+  removeLastV2Component(userId) {
     const state = this.getOrCreateState(userId);
-    if (index === undefined) {
-      state.v2.mediaGallery.pop();
-    } else {
-      state.v2.mediaGallery.splice(index, 1);
-    }
+    state.v2.components.pop();
     return state;
   }
 
@@ -219,17 +166,20 @@ export class EmbedCreatorManager {
 
     let message;
     if (style === 'v2') {
+      const components = state.v2.components.length > 0
+        ? state.v2.components.map(comp => {
+          if (comp.type === 'button') {
+            return {
+              ...comp,
+              customId: comp.customId || (comp.url ? undefined : `v2_btn_${Math.random().toString(36).substr(2, 9)}`)
+            };
+          }
+          return comp;
+        })
+        : [{ type: 'text', content: '*(No Content)*' }];
+
       message = ComponentBuilder.buildV2Message({
-        textDisplays: state.v2.textDisplays.length > 0 ? state.v2.textDisplays : ['*(No Content)*'],
-        labels: state.v2.labels || [],
-        thumbnail: state.v2.thumbnail || null,
-        mediaGallery: state.v2.mediaGallery && state.v2.mediaGallery.length > 0 ? state.v2.mediaGallery : null,
-        buttons: state.v2.buttons.map(b => ComponentBuilder.createButton({
-          label: b.label,
-          customId: b.customId || `v2_btn_${Math.random().toString(36).substr(2, 9)}`,
-          style: ButtonStyle.Primary
-        })),
-        separator: state.v2.separators,
+        components,
         accentColor: this._hexToDecimal(state.embed.color)
       });
     } else {
@@ -250,10 +200,11 @@ export class EmbedCreatorManager {
 
   createComponents(style = 'embed', state = null) {
     if (style === 'v2') {
-      const sepCount = state?.v2?.separators?.length || 0;
-      const labelCount = state?.v2?.labels?.length || 0;
-      const mediaCount = state?.v2?.mediaGallery?.length || 0;
-      const hasThumbnail = state?.v2?.thumbnail && state.v2.thumbnail.length > 0;
+      const components = state?.v2?.components || [];
+      const sepCount = components.filter(c => c.type === 'separator').length;
+      const labelCount = components.filter(c => c.type === 'label').length;
+      const mediaCount = components.reduce((acc, c) => acc + (c.type === 'mediaGallery' ? c.items.length : 0), 0);
+      const hasThumbnail = components.some(c => c.type === 'thumbnail');
 
       const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('embed_creator_textdisplay_add').setLabel('Add Text').setStyle(ButtonStyle.Secondary),
